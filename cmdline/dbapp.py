@@ -2,7 +2,9 @@
 
 from optparse import OptionParser
 
-from psycopg2 import connect
+from dblib import connect
+from bl import get_all, get_one
+from bl import insert, update, delete
 
 
 class Film(object):
@@ -50,41 +52,16 @@ def get_by_key(dbconn):
             print "Id must be a positive integer"
             continue
         break
-    curs = dbconn.cursor()
-    try:
-        curs.execute("SELECT id, title, release_year FROM film WHERE id = %s",
-                     (id,))
-    except Exception, exc:
-        curs.close()
-        dbconn.rollback()
-        print "ERROR: ", exc.args[0]
-        return None
-    row = curs.fetchone()
-    curs.close()
-    dbconn.commit()
+    row = get_one(dbconn, id)
     if not row:
         print "Film not found"
         return None
     return Film(row[0], row[1], row[2])
 
 
-def execute(dbconn, query, args):
-    curs = dbconn.cursor()
-    try:
-        curs.execute(query, args)
-    except Exception, exc:
-        curs.close()
-        dbconn.rollback()
-        print "ERROR: ", exc.args[0]
-        return False
-    curs.close()
-    dbconn.commit()
-    return True
-
-
 def dbapp():
     (opts, args) = OptionParser("usage: %prog dbname").parse_args()
-    dbconn = connect("dbname=%s" % args[0])
+    dbconn = connect(args[0])
     while True:
         for cmd in ['Add', 'List', 'Update', 'Delete', 'Quit']:
             print '  ', cmd[:1], '-', cmd
@@ -93,16 +70,10 @@ def dbapp():
             break
         elif cmd == 'A':
             film = edit(Film())
-            if execute(dbconn, "INSERT INTO film VALUES "
-                       "(%(id)s, %(title)s, %(release_year)s)", film.__dict__):
+            if insert(dbconn, film):
                 print "Film '%r' added" % film
         elif cmd == 'L':
-            curs = dbconn.cursor()
-            curs.execute("SELECT id, title, release_year FROM film "
-                         "ORDER BY id")
-            rows = curs.fetchall()
-            curs.close()
-            dbconn.commit()
+            rows = get_all(dbconn)
             print "    Id %-32s Year" % 'Title'
             for row in rows:
                 print "%6d %-32s %4d" % (row[0], row[1], row[2])
@@ -112,9 +83,7 @@ def dbapp():
                 continue
             print "Updating '%r'" % old_film
             film = edit(old_film, True)
-            if execute(dbconn, "UPDATE film SET title = %s, release_year = %s "
-                       "WHERE id = %s", (film.title, film.release_year,
-                                         film.id)):
+            if update(dbconn, film):
                 print "Film '%r' updated" % film
         elif cmd == 'D':
             old_film = get_by_key(dbconn)
@@ -123,8 +92,7 @@ def dbapp():
             confirm = raw_input("Delete film '%r' (y/n) [n]: " % old_film)
             if not confirm.lower()[:1] == 'y':
                 continue
-            if execute(dbconn, "DELETE FROM film WHERE id = %s",
-                       (old_film.id,)):
+            if delete(dbconn, old_film.id):
                 print "Film '%r' deleted" % old_film
         else:
             print "Invalid choice"
