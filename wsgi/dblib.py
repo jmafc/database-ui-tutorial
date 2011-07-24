@@ -1,51 +1,43 @@
 # -*- coding: utf-8 -*-
 
-from psycopg2 import connect as pgconnect
+from psycopg2 import connect
 
 
-def connect(dbname):
-    return pgconnect("dbname=%s" % dbname)
+class DbConnection(object):
+    def __init__(self, dbname):
+        self.dbname = dbname
+        self.conn = None
 
+    def connect(self):
+        if not self.conn:
+            self.conn = connect("dbname=%s" % self.dbname)
 
-def fetchall(dbconn, query):
-    curs = dbconn.cursor()
-    try:
-        curs.execute(query)
-    except Exception, exc:
+    def fetchall(self, query):
+        try:
+            curs = self.execute(query)
+        except Exception, exc:
+            print "ERROR: ", exc.args[0]
+            return None
+        rows = curs.fetchall()
         curs.close()
-        dbconn.rollback()
-        print "ERROR: ", exc.args[0]
-        return None
-    rows = curs.fetchall()
-    curs.close()
-    dbconn.commit()
-    return rows
+        return rows
 
-
-def fetchone(dbconn, query, args):
-    curs = dbconn.cursor()
-    try:
-        curs.execute(query, args)
-    except Exception, exc:
+    def fetchone(self, query, args):
+        try:
+            curs = self.execute(query, args)
+        except Exception, exc:
+            print "ERROR: ", exc.args[0]
+            return None
+        row = curs.fetchone()
         curs.close()
-        dbconn.rollback()
-        print "ERROR: ", exc.args[0]
-        return None
-    row = curs.fetchone()
-    curs.close()
-    dbconn.commit()
-    return row
+        return row
 
-
-def execute(dbconn, query, args):
-    curs = dbconn.cursor()
-    try:
-        curs.execute(query, args)
-    except Exception, exc:
-        curs.close()
-        dbconn.rollback()
-        print "ERROR: ", exc.args[0]
-        return False
-    curs.close()
-    dbconn.commit()
-    return True
+    def execute(self, query, args=None):
+        curs = self.conn.cursor()
+        try:
+            curs.execute(query, args)
+        except Exception, exc:
+            exc.args += (query, )
+            curs.close()
+            raise
+        return curs

@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>
+      New Film: Movies Database Application
+    </title>
+    <link rel="stylesheet" type="text/css" media="screen"
+	  href="/static/dbapp.css" />
+  </head>
+
+  <body>
+    <div id="page">
+      <div id="header">
+	<h1 id="appname">Movies Database Application</h1>
+      </div>
+      <div id="main">
+	<h1>New Film</h1>
+	<div id="content">
+	  %(errmsg)s
+	  <form class="mainform" name="addfilm" action="/film/create"
+		method="post">
+	    <fieldset>
+	      <div class="form-row">
+		<label for="id">Id: </label>
+		<input type="text" name="id" size="10" value="%(id)s" />
+	      </div>
+	      <div class="form-row">
+		<label for="id">Title: </label>
+		<input type="text" name="title" size="64" value="%(title)s" />
+	      </div>
+	      <div class="form-row">
+		<label for="id">Release Year: </label>
+		<input type="text" name="release_year" size="64"
+		       value="%(release_year)s"/>
+	      </div>
+	    </fieldset>
+	    <div class="submit-btn">
+	      <input type="submit" name="save" value="Save" />
+	    </div>
+	  </form>
+	</div>
+      </div>
+      <div id="footer">
+      </div>
+    </div>
+  </body>
+</html>
