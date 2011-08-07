@@ -82,7 +82,7 @@ class FilmHandler(object):
         self.db.connect()
         try:
             bl.insert(self.db, film)
-        except Exception, exc:
+        except Exception as exc:
             self.db.conn.rollback()
             return render('film/new.html', id=film.id, title=film.title,
                           release_year=film.release_year,
@@ -126,9 +126,9 @@ class FilmHandler(object):
         self.db.connect()
         try:
             bl.update(self.db, film)
-        except Exception, exc:
+        except Exception as exc:
             self.db.conn.rollback()
-            return render('film/new.html', id=film.id, title=film.title,
+            return render('film/edit.html', id=film.id, title=film.title,
                           release_year=film.release_year,
                           errmsg=self.db_error(exc))
         else:
@@ -137,8 +137,10 @@ class FilmHandler(object):
 
     def delete_conf(self, id=None):
         "Request confirmation before deleting an existing film by id"
+        if not id or not id.isdigit() or int(id) < 1:
+            raise NotFound("Film id must be a positive integer: %s" % id)
         self.db.connect()
-        row = bl.get_one(self.db, id)
+        row = bl.get_one(self.db, int(id))
         self.db.conn.rollback()
         if not row:
             raise NotFound("Film %d not found " % int(id))
@@ -147,17 +149,19 @@ class FilmHandler(object):
 
     def delete(self, id=None):
         "Deletes an existing film by id"
+        if not id or not id.isdigit() or int(id) < 1:
+            raise NotFound("Film id must be a positive integer: %s" % id)
         self.db.connect()
-        row = bl.get_one(self.db, id)
+        row = bl.get_one(self.db, int(id))
         self.db.conn.rollback()
         if not row:
             raise NotFound("Film %d not found " % int(id))
         try:
             bl.delete(self.db, int(id))
-        except Exception, exc:
+        except Exception as exc:
             self.db.conn.rollback()
-            return render('film/new.html', id=film.id, title=film.title,
-                          release_year=film.release_year,
+            return render('film/delete.html', id=int(id), film="%s - %s" % (
+                    row[1], row[2]),
                           errmsg=self.db_error(exc))
         else:
             self.db.conn.commit()

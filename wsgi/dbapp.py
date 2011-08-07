@@ -82,9 +82,9 @@ class DatabaseApp(object):
             try:
                 (func, params) = self.dispatch(req.path_info, req)
                 resp = Response(func(**params))
-            except NotFound, exc:
+            except NotFound as exc:
                 resp = Response(self.error404(exc), status=404)
-            except Redirect, exc:
+            except Redirect as exc:
                 resp = Response('', status=303)
                 resp.headers['Location'] = str(exc)
         start_response(resp.status, resp.headers.items())
