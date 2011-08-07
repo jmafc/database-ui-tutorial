@@ -56,37 +56,29 @@ class FilmHandler(object):
             raise NotFound
         return (func, params)
 
-    def form_error(self, errors):
-        errlist = ['<li class="errmsg">%s: %s</li>' % (fld, msg)
-                   for (fld, msg) in errors.items()]
-        return '<p class="errmsg">Please correct the following errors:\n<ul>' \
-            + '\n'.join(errlist) + '\n</ul></p>'
-
     def db_error(self, exc):
-        return '<p class="errmsg">A database error has occurred: %s<p>' % \
-                exc.args[0]
+        return 'A database error has occurred: %s' % exc.args[0]
 
     def new(self):
         "Displays a form to input a new film"
-        return render('film/new.html', id='', title='', release_year='',
-                      errmsg='')
+        return render('/film/new.html', id='', errors=None)
 
     def create(self, **formdata):
         "Saves the film data submitted from ``new``"
         film = FilmForm(**formdata)
         film.validate()
         if film.errors:
-            return render('film/new.html', id=film.id, title=film.title,
+            return render('/film/new.html', id=film.id, title=film.title,
                           release_year=film.release_year,
-                          errmsg=self.form_error(film.errors))
+                          errors=film.errors)
         self.db.connect()
         try:
             bl.insert(self.db, film)
         except Exception as exc:
             self.db.conn.rollback()
-            return render('film/new.html', id=film.id, title=film.title,
+            return render('/film/new.html', id=film.id, title=film.title,
                           release_year=film.release_year,
-                          errmsg=self.db_error(exc))
+                          errors={None: self.db_error(exc)})
         else:
             self.db.conn.commit()
         raise Redirect('/film/')
@@ -96,12 +88,7 @@ class FilmHandler(object):
         self.db.connect()
         film_list = bl.get_all(self.db)
         self.db.conn.rollback()
-        film_tbl = ''
-        for i, film in enumerate(film_list):
-            film_tbl += '<tr class="row%d">\n' % (i % 2 + 1)
-            film_tbl += '<th scope="row"><a href="/film/%d">%s - %d</a>' \
-                '</th>\n' % (film[0], film[1], film[2])
-        return render('film/list.html', film_tbl=film_tbl)
+        return render('/film/list.html', films=film_list)
 
     def edit(self, id):
         "Displays a form for editing a film by id"
@@ -112,8 +99,8 @@ class FilmHandler(object):
         self.db.conn.rollback()
         if not row:
             raise NotFound("Film %d not found " % int(id))
-        return render('film/edit.html', id=row[0], title=row[1],
-                      release_year=row[2], errmsg='')
+        return render('/film/edit.html', id=row[0], title=row[1],
+                      release_year=row[2])
 
     def save(self, **formdata):
         "Saves the film data submitted from ``default``"
@@ -122,15 +109,15 @@ class FilmHandler(object):
         if film.errors:
             return render('film/edit.html', id=film.id, title=film.title,
                           release_year=film.release_year,
-                          errmsg=self.form_error(film.errors))
+                          errors=film.errors)
         self.db.connect()
         try:
             bl.update(self.db, film)
         except Exception as exc:
             self.db.conn.rollback()
-            return render('film/edit.html', id=film.id, title=film.title,
+            return render('/film/edit.html', id=film.id, title=film.title,
                           release_year=film.release_year,
-                          errmsg=self.db_error(exc))
+                          errors={None: self.db_error(exc)})
         else:
             self.db.conn.commit()
         raise Redirect('/film/')
@@ -144,7 +131,7 @@ class FilmHandler(object):
         self.db.conn.rollback()
         if not row:
             raise NotFound("Film %d not found " % int(id))
-        return render('film/delete.html', id=int(id), film="%s - %s" % (
+        return render('/film/delete.html', id=int(id), film="%s - %s" % (
                 row[1], row[2]))
 
     def delete(self, id=None):
@@ -160,9 +147,8 @@ class FilmHandler(object):
             bl.delete(self.db, int(id))
         except Exception as exc:
             self.db.conn.rollback()
-            return render('film/delete.html', id=int(id), film="%s - %s" % (
-                    row[1], row[2]),
-                          errmsg=self.db_error(exc))
+            return render('/film/delete.html', id=int(id), film="%s - %s" % (
+                row[1], row[2]), errors={None: self.db_error(exc)})
         else:
             self.db.conn.commit()
         raise Redirect('/film/')

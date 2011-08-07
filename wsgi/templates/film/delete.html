@@ -1,35 +1,13 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <title>
-      Are you sure?: Movies Database Application
-    </title>
-    <link rel="stylesheet" type="text/css" media="screen"
-	  href="/static/dbapp.css" />
-  </head>
-
-  <body>
-    <div id="page">
-      <div id="header">
-	<h1 id="appname">Movies Database Application</h1>
-      </div>
-      <div id="main">
-	<h1>Are you sure?</h1>
-	<p>Are you sure you want to delete the film "%(film)s"?
-	  All of the following related items will be deleted:</p>
-	<ul>
-	  <li>Film: <a href="/film/%(id)s">%(film)s</a>
-	  </li>
-	</ul>
-	<form action="" method="post">
-	  <div>
-	    <input type="submit" value="Yes, I'm sure" />
-	  </div>
-	</form>
-      </div>
-      <div id="footer">
-      </div>
-    </div>
-  </body>
-</html>
+<%inherit file="/base.html"/>
+<%def name="page_title()">Are you sure?</%def>\
+<p>Are you sure you want to delete the film "${film}"?
+  All of the following related items will be deleted:</p>
+<ul>
+  <li>Film: <a href="/film/${id}">${film}</a>
+  </li>
+</ul>
+<form action="" method="post">
+  <div>
+    <input type="submit" value="Yes, I'm sure" />
+  </div>
+</form>

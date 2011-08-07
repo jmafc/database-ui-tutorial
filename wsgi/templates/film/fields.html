@@ -1,0 +1,9 @@
+<%namespace name="form" file="/forms.html"/>
+<%page args="edit=False"/>
+<fieldset>
+  <%form:text name="id" label="Id" size="10" value="${id}"
+              readonly="${edit}"/>
+  <%form:text name="title" label="Title" size="64" value="${title}"/>
+  <%form:text name="release_year" label="Release Year" size="10"
+              value="${release_year}"/>
+</fieldset>
