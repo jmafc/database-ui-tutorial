@@ -2,8 +2,7 @@
 
 from templating import render
 from errors import NotFound, Redirect
-
-import bl
+from bl.film import Film
 
 
 class FilmForm(object):
@@ -61,94 +60,100 @@ class FilmHandler(object):
 
     def new(self):
         "Displays a form to input a new film"
-        return render('/film/new.html', id='', errors=None)
+        return render('/film/new.html', id='')
 
     def create(self, **formdata):
         "Saves the film data submitted from ``new``"
-        film = FilmForm(**formdata)
-        film.validate()
-        if film.errors:
-            return render('/film/new.html', id=film.id, title=film.title,
-                          release_year=film.release_year,
-                          errors=film.errors)
-        self.db.connect()
-        try:
-            bl.insert(self.db, film)
-        except Exception as exc:
-            self.db.conn.rollback()
-            return render('/film/new.html', id=film.id, title=film.title,
-                          release_year=film.release_year,
-                          errors={None: self.db_error(exc)})
-        else:
-            self.db.conn.commit()
+        form = FilmForm(**formdata)
+        form.validate()
+        errors = form.errors
+        if not errors:
+            film = Film(form.id, form.title, form.release_year)
+            try:
+                film.insert(self.db)
+            except Exception as exc:
+                errors = {None: self.db_error(exc)}
+            else:
+                self.db.commit()
+        if errors:
+            return render('/film/new.html', id=form.id, title=form.title,
+                          release_year=form.release_year, errors=errors)
         raise Redirect('/film/')
 
     def index(self):
         "Lists all films"
-        self.db.connect()
-        film_list = bl.get_all(self.db)
-        self.db.conn.rollback()
-        return render('/film/list.html', films=film_list)
+        errors = {}
+        try:
+            film_list = Film().all(self.db)
+        except Exception as exc:
+            film_list = []
+            errors = {None: self.db_error(exc)}
+        return render('/film/list.html', films=film_list, errors=errors)
 
     def edit(self, id):
         "Displays a form for editing a film by id"
         if not id or not id.isdigit() or int(id) < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
-        self.db.connect()
-        row = bl.get_one(self.db, id)
-        self.db.conn.rollback()
+        film = Film(int(id))
+        try:
+            row = film.get(self.db)
+        except Exception as exc:
+            return render('/film/edit.html', id=film.id,
+                          errors={None: self.db_error(exc)})
         if not row:
-            raise NotFound("Film %d not found " % int(id))
-        return render('/film/edit.html', id=row[0], title=row[1],
-                      release_year=row[2])
+            raise NotFound("Film %d not found " % film.id)
+        return render('/film/edit.html', id=film.id, title=film.title,
+                      release_year=film.release_year)
 
     def save(self, **formdata):
         "Saves the film data submitted from ``default``"
-        film = FilmForm(**formdata)
-        film.validate()
-        if film.errors:
-            return render('film/edit.html', id=film.id, title=film.title,
-                          release_year=film.release_year,
-                          errors=film.errors)
-        self.db.connect()
-        try:
-            bl.update(self.db, film)
-        except Exception as exc:
-            self.db.conn.rollback()
+        form = FilmForm(**formdata)
+        form.validate()
+        errors = form.errors
+        if not errors:
+            film = Film(form.id, form.title, form.release_year)
+            try:
+                film.update(self.db)
+            except Exception as exc:
+                errors = {None: self.db_error(exc)}
+            else:
+                self.db.commit()
+        if errors:
             return render('/film/edit.html', id=film.id, title=film.title,
-                          release_year=film.release_year,
-                          errors={None: self.db_error(exc)})
-        else:
-            self.db.conn.commit()
+                          release_year=film.release_year, errors=errors)
         raise Redirect('/film/')
 
     def delete_conf(self, id=None):
         "Request confirmation before deleting an existing film by id"
         if not id or not id.isdigit() or int(id) < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
-        self.db.connect()
-        row = bl.get_one(self.db, int(id))
-        self.db.conn.rollback()
+        film = Film(int(id))
+        try:
+            row = film.get(self.db)
+        except Exception as exc:
+            return render('/film/edit.html', id=film.id,
+                          errors={None: self.db_error(exc)})
         if not row:
-            raise NotFound("Film %d not found " % int(id))
-        return render('/film/delete.html', id=int(id), film="%s - %s" % (
-                row[1], row[2]))
+            raise NotFound("Film %d not found " % film.id)
+        return render('/film/delete.html', id=film.id, film="%r" % (film))
 
     def delete(self, id=None):
         "Deletes an existing film by id"
         if not id or not id.isdigit() or int(id) < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
-        self.db.connect()
-        row = bl.get_one(self.db, int(id))
-        self.db.conn.rollback()
-        if not row:
-            raise NotFound("Film %d not found " % int(id))
+        film = Film(int(id))
         try:
-            bl.delete(self.db, int(id))
+            row = film.get(self.db)
         except Exception as exc:
-            self.db.conn.rollback()
-            return render('/film/delete.html', id=int(id), film="%s - %s" % (
-                row[1], row[2]), errors={None: self.db_error(exc)})
+            return render('/film/edit.html', id=film.id,
+                          errors={None: self.db_error(exc)})
+        if not row:
+            raise NotFound("Film %d not found " % film.id)
+        try:
+            film.delete(self.db)
+        except Exception as exc:
+            return render('/film/delete.html', id=film.id, film="%r" % film,
+                          errors={None: self.db_error(exc)})
         else:
-            self.db.conn.commit()
+            self.db.commit()
         raise Redirect('/film/')

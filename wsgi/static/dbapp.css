@@ -13,6 +13,11 @@
     clear: both;
     float: right;
 }
+.paginate {
+    padding: 10px 8px;
+    line-height: 22px;
+    border: 1px solid #ccc;
+}
 fieldset {
     border: 1px solid #ccc;
     margin-bottom: 0.5em;

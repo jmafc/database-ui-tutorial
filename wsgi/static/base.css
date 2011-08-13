@@ -43,7 +43,7 @@ h2, caption {
     text-align: left;
 }
 .newlink {
-    padding-left: 12px;
+    padding: 2px 8px 0 12px;
 }
 td, th {
     border-bottom: 1px solid #eee;

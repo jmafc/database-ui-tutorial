@@ -2,13 +2,18 @@
 <%def name="page_title()">Select film to change</%def>\
 <ul class="newlink"><li><a href="/film/new">New film</a></li></ul>
 <div id="changelist">
+  % if errors:
+  <p class="errmsg">Please correct the following errors:</p>
+    % if None in errors:
+      <div class="errmsg">${errors[None]}</div>
+    % endif
+  % endif
   <table border="1">
     <thead>
       <tr><th>Name</th></tr>
       % for i, film in enumerate(films):
       <tr class="row${(i % 2 + 1)}">
-        <th scope="row"><a href="/film/${film[0]}">${'%s - %d' % (
-	    film[1], film[2])}</a></th>
+        <th scope="row"><a href="/film/${film.id}">${'%r' % (film)}</a></th>
       </tr>
       % endfor
     </thead>
@@ -16,4 +21,7 @@
       </tr>
     </tbody>
   </table>
+  <p class="paginate">
+    ${len(films)} films
+  </p>
 </div>
