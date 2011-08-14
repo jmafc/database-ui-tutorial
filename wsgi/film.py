@@ -110,8 +110,8 @@ class FilmHandler(object):
         form = FilmForm(**formdata)
         form.validate()
         errors = form.errors
+        film = Film(form.id, form.title, form.release_year)
         if not errors:
-            film = Film(form.id, form.title, form.release_year)
             try:
                 film.update(self.db)
             except Exception as exc:
