@@ -43,10 +43,10 @@ class DatabaseApp(object):
         self.handler = FilmHandler(self.dbconn)
 
     def index(self):
-        return render('/home.html')
+        return render('home.html')
 
     def error404(self, msg=''):
-        return render('/error/404.html', msg=str(msg))
+        return render('error/404.html', msg=str(msg))
 
     def serve_css(self, path, resp):
         text = None

@@ -1,18 +1,19 @@
-<%inherit file="/base.html"/>
-<%namespace file="fields.html" name="fields"/>
-<%def name="page_title()">New Film</%def>\
+{% extends "base.html" %}
+{% block page_title %}New Film{% endblock %}
+{% block content %}
 <div id="content">
-  % if errors:
+  {%- if errors %}
   <p class="errmsg">Please correct the following errors:</p>
-    % if None in errors:
-      <div class="errmsg">${errors[None]}</div>
-    % endif
-  % endif
+    {%- if None in errors %}
+      <div class="errmsg">{{ errors[None] }}</div>
+    {% endif -%}
+  {% endif %}
   <form class="mainform" name="addfilm" action="/film/create"
 	method="post">
-    ${fields.body()}
+    {% include "film/fields.html" %}
     <div class="submit-btn">
       <input type="submit" name="save" value="Save" />
     </div>
   </form>
 </div>
+{% endblock %}

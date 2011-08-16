@@ -1,27 +1,29 @@
-<%inherit file="/base.html"/>
-<%def name="page_title()">Select film to change</%def>\
+{% extends "base.html" %}
+{% block page_title %}Select film to change{% endblock %}
+{% block content %}
 <ul class="newlink"><li><a href="/film/new">New film</a></li></ul>
 <div id="changelist">
-  % if errors:
+  {%- if errors %}
   <p class="errmsg">Please correct the following errors:</p>
-    % if None in errors:
-      <div class="errmsg">${errors[None]}</div>
-    % endif
-  % endif
+    {% if None in errors %}
+      <div class="errmsg">{{ errors[None] }}</div>
+    {% endif %}
+  {% endif %}
   <table border="1">
     <thead>
       <tr><th>Name</th></tr>
-      % for i, film in enumerate(films):
-      <tr class="row${(i % 2 + 1)}">
-        <th scope="row"><a href="/film/${film.id}">${'%r' % (film)}</a></th>
-      </tr>
-      % endfor
     </thead>
     <tbody>
+      {% for film in films -%}
+      <tr class="{{ loop.cycle('row1', 'row2') }}">
+        <th scope="row"><a href="/film/{{ film.id }}">
+            {{- film|e }}</a></th>
       </tr>
+      {% endfor -%}
     </tbody>
   </table>
   <p class="paginate">
-    ${len(films)} films
+    {{ films|length }} films
   </p>
 </div>
+{% endblock %}

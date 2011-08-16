@@ -1,5 +1,6 @@
-<%inherit file="/base.html"/>
-<%def name="page_title()">Main Menu</%def>\
+{% extends "base.html" %}
+{% block page_title %}Main Menu{% endblock %}
+{% block content %}
 <div id="section">
   <table summary="Movies" class="admin-menu">
     <caption>Movies</caption>
@@ -11,3 +12,4 @@
     </tr>
   </table>
 </div>
+{% endblock %}

@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import os.path
-import tempfile
 
-from mako.lookup import TemplateLookup
+from jinja2 import Environment, FileSystemLoader
 
 
-lookup = TemplateLookup(
-    directories=os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                             'templates'),
-    module_directory=os.path.join(tempfile.gettempdir(), 'mako', 'dbapp'),
-    filesystem_checks=True, collection_size=50,
-    output_encoding='utf-8')
+env = Environment(loader=FileSystemLoader(os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), 'templates')))
 
 
 def render(filename, *args, **data):
-    template = lookup.get_template(filename)
-    return template.render(*args, **data)
+    template = env.get_template(filename)
+    return str(template.render(*args, **data))

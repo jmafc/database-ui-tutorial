@@ -1,46 +1,52 @@
-<%def name="error(name)">\
-% if errors and name in errors:
-  <div class="errmsg">${errors[name]}</div>
-% endif
-</%def>\
-<%def name="checkbox(name, label, value=None)">
+{# Individual field error message #}
+{% macro field_error(name, errors=None) %}
+{%- if errors and name in errors %}
+  <div class="errmsg">{{ errors[name] }}</div>
+{% endif -%}
+{% endmacro %}
+
+{# Checkbox #}
+{% macro checkbox(name, label, value=None, errors=None) %}
 <div class="form-row">
-${error(name)}\
-  <label for="${name}">${label}: </label>
-  <input type="checkbox" id="${name}" name="${name}"\
-${value and ' checked="checked"' or ''} />
-</div>\
-</%def>\
-<%def name="select(name, label, iter, value=None)">
+  {{- field_error(name, errors) }}
+  <label for="{{ name }}">{{ label }}: </label>
+  <input type="checkbox" id="{{ name }}" name="{{ name }}"
+         {%- if value %} checked="checked"{% endif %} />
+</div>
+{%- endmacro %}
+
+{# Drop-down selector #}
+{% macro select(name, label, values, value=None, errors=None) %}
 <div class="form-row">
-${error(name)}\
-  <label for="${name}">${label}: </label>
-  <select id="${name}" name="${name}">
-    % for (k, v) in iter:
-        % if value:
-    <option value="${k}"\
-${k == value and ' selected="selected"' or ''}>${v}</option>
-        % else:
-    <option value="${k}">${v}</option>
-        % endif
-    % endfor
+  {{- field_error(name, errors) }}
+  <label for="{{ name }}">{{ label }}: </label>
+  <select id="{{ name }}" name="{{ name }}">
+    {% for key, val in values.items() -%}
+    <option value="{{ key }}"
+      {%- if value and key == value %} selected="selected"{% endif -%}>
+      {{- val }}</option>
+    {% endfor %}
   </select>
-</div>\
-</%def>\
-<%def name="text(name, label, size, value=None, readonly=False)">
+</div>
+{%- endmacro %}
+
+{# Single-line text input #}
+{% macro text(name, label, size, value=None, readonly=False, errors=None) %}
 <div class="form-row">
-${error(name)}\
-  <label for="${name}">${label}: </label>
-  <input type="text" id="${name}" name="${name}" size="${size}"\
-${value and (' value="%s"' % unicode(value).replace('"', '&quot;')) or ''}\
-${readonly and ' readonly="readonly"' or ''} />
-</div>\
-</%def>\
-<%def name="textarea(name, label, rows, cols, value=None)">
+  {{- field_error(name, errors) }}
+  <label for="{{ name }}">{{ label }}: </label>
+  <input type="text" id="{{ name }}" name="{{ name }}" size="{{ size }}"
+         {%- if value %} value="{{ value|e }}"{% endif %}
+         {%- if readonly %} readonly="readonly"{% endif %} />
+</div>
+{%- endmacro %}
+
+{# Multi-line text input #}
+{% macro textarea(name, label, rows, cols, value=None, errors=None) %}
 <div class="form-row">
-${error(name)}\
-  <label for="${name}">${label}: </label>
-  <textarea id="${name}" name="${name}" rows="${rows}" cols="${cols}">\
-${value or ''}</textarea>
-</div>\
-</%def>\
+  {{- field_error(name, errors) }}
+  <label for="{{ name }}">{{ label }}: </label>
+  <textarea id="{{ name }}" name="{{ name }}" rows="{{ rows }}" cols="{{ cols }}">
+  {%- if value %}{{ value }}{% endif %}</textarea>
+</div>
+{%- endmacro %}

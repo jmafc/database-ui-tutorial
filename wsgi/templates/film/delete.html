@@ -1,9 +1,10 @@
-<%inherit file="/base.html"/>
-<%def name="page_title()">Are you sure?</%def>\
-<p>Are you sure you want to delete the film "${film}"?
+{% extends "base.html" %}
+{% block page_title %}Are you sure?{% endblock %}
+{% block content %}
+<p>Are you sure you want to delete the film "{{ film|e }}"?
   All of the following related items will be deleted:</p>
 <ul>
-  <li>Film: <a href="/film/${id}">${film}</a>
+  <li>Film: <a href="/film/{{ id }}">{{ film|e }}</a>
   </li>
 </ul>
 <form action="" method="post">
@@ -11,3 +12,4 @@
     <input type="submit" value="Yes, I'm sure" />
   </div>
 </form>
+{% endblock %}

@@ -60,7 +60,7 @@ class FilmHandler(object):
 
     def new(self):
         "Displays a form to input a new film"
-        return render('/film/new.html', id='')
+        return render('film/new.html', id='')
 
     def create(self, **formdata):
         "Saves the film data submitted from ``new``"
@@ -76,7 +76,7 @@ class FilmHandler(object):
             else:
                 self.db.commit()
         if errors:
-            return render('/film/new.html', id=form.id, title=form.title,
+            return render('film/new.html', id=form.id, title=form.title,
                           release_year=form.release_year, errors=errors)
         raise Redirect('/film/')
 
@@ -88,7 +88,7 @@ class FilmHandler(object):
         except Exception as exc:
             film_list = []
             errors = {None: self.db_error(exc)}
-        return render('/film/list.html', films=film_list, errors=errors)
+        return render('film/list.html', films=film_list, errors=errors)
 
     def edit(self, id):
         "Displays a form for editing a film by id"
@@ -98,11 +98,11 @@ class FilmHandler(object):
         try:
             row = film.get(self.db)
         except Exception as exc:
-            return render('/film/edit.html', id=film.id,
+            return render('film/edit.html', id=film.id,
                           errors={None: self.db_error(exc)})
         if not row:
             raise NotFound("Film %d not found " % film.id)
-        return render('/film/edit.html', id=film.id, title=film.title,
+        return render('film/edit.html', id=film.id, title=film.title,
                       release_year=film.release_year)
 
     def save(self, **formdata):
@@ -119,7 +119,7 @@ class FilmHandler(object):
             else:
                 self.db.commit()
         if errors:
-            return render('/film/edit.html', id=film.id, title=film.title,
+            return render('film/edit.html', id=film.id, title=film.title,
                           release_year=film.release_year, errors=errors)
         raise Redirect('/film/')
 
@@ -131,11 +131,11 @@ class FilmHandler(object):
         try:
             row = film.get(self.db)
         except Exception as exc:
-            return render('/film/edit.html', id=film.id,
+            return render('film/edit.html', id=film.id,
                           errors={None: self.db_error(exc)})
         if not row:
             raise NotFound("Film %d not found " % film.id)
-        return render('/film/delete.html', id=film.id, film="%r" % (film))
+        return render('film/delete.html', id=film.id, film="%r" % (film))
 
     def delete(self, id=None):
         "Deletes an existing film by id"
@@ -145,14 +145,14 @@ class FilmHandler(object):
         try:
             row = film.get(self.db)
         except Exception as exc:
-            return render('/film/edit.html', id=film.id,
+            return render('film/edit.html', id=film.id,
                           errors={None: self.db_error(exc)})
         if not row:
             raise NotFound("Film %d not found " % film.id)
         try:
             film.delete(self.db)
         except Exception as exc:
-            return render('/film/delete.html', id=film.id, film="%r" % film,
+            return render('film/delete.html', id=film.id, film="%r" % film,
                           errors={None: self.db_error(exc)})
         else:
             self.db.commit()
