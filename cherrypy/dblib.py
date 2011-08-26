@@ -45,7 +45,7 @@ class DbConnection(object):
 
     def fetchall(self, query):
         try:
-            curs = self.execute(query, expcount=2)
+            curs = self.execute(query)
         except Exception as exc:
             raise exc
         rows = curs.fetchall()
@@ -61,7 +61,7 @@ class DbConnection(object):
         curs.close()
         return row
 
-    def execute(self, query, args=None, expcount=1):
+    def execute(self, query, args=None):
         if self.conn is None:
             self.connect()
         curs = self.conn.cursor()
@@ -71,6 +71,4 @@ class DbConnection(object):
             self.conn.rollback()
             curs.close()
             raise exc
-        if expcount == 1 and curs.rowcount == 0:
-            raise DatabaseError("No rows affected. Expected: 1 row")
         return curs
