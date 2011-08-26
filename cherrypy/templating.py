@@ -11,4 +11,4 @@ env = Environment(loader=FileSystemLoader(os.path.join(
 
 def render(filename, *args, **data):
     template = env.get_template(filename)
-    return str(template.render(*args, **data))
+    return template.render(*args, **data)
