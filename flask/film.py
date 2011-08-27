@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from templating import render
-from errors import NotFound, Redirect
+from flask import g, abort, render_template, request, redirect
+
+from main import app
+from dblib import DbConnection
 from bl.film import Film
 
 
@@ -25,135 +27,112 @@ class FilmForm(object):
                 "Release year must be a number greater than 1887"
 
 
-class FilmHandler(object):
-    def __init__(self, dbconn):
-        self.db = dbconn
+def db_error(exc):
+    return 'A database error has occurred: %s' % exc.args[0]
 
-    def dispatch(self, path, request):
-        params = {}
-        if path == '/':
-            func = self.index
-        elif path == '/new':
-            func = self.new
-        elif path == '/create':
-            func = self.create
-            params = request.vars
-        elif path.startswith('/save/'):
-            func = self.save
-            params = {'id': path[6:]}
-            params.update(request.vars)
-        elif path.startswith('/delete/'):
-            params = {'id': path[8:]}
-            if request.method == 'GET':
-                func = self.delete_conf
-            else:
-                func = self.delete
-        elif path.startswith('/'):
-            func = self.edit
-            params = {'id': path[1:]}
-        else:
-            raise NotFound
-        return (func, params)
 
-    def db_error(self, exc):
-        return 'A database error has occurred: %s' % exc.args[0]
+@app.before_request
+def before_request():
+    if not hasattr(g, 'db'):
+        g.db = DbConnection(app.config['DBNAME'])
 
-    def new(self):
-        "Displays a form to input a new film"
-        return render('film/new.html', id='')
 
-    def create(self, **formdata):
-        "Saves the film data submitted from ``new``"
-        form = FilmForm(**formdata)
-        form.validate()
-        errors = form.errors
-        if not errors:
-            film = Film(form.id, form.title, form.release_year)
-            try:
-                film.insert(self.db)
-            except Exception as exc:
-                errors = {None: self.db_error(exc)}
-            else:
-                self.db.commit()
-        if errors:
-            return render('film/new.html', id=form.id, title=form.title,
-                          release_year=form.release_year, errors=errors)
-        raise Redirect('/film/')
+@app.route('/film/new')
+def new():
+    "Displays a form to input a new film"
+    return render_template('film/new.html', id='')
 
-    def index(self):
-        "Lists all films"
-        errors = {}
-        try:
-            film_list = Film().all(self.db)
-        except Exception as exc:
-            film_list = []
-            errors = {None: self.db_error(exc)}
-        return render('film/list.html', films=film_list, errors=errors)
 
-    def edit(self, id):
-        "Displays a form for editing a film by id"
-        if not id or not id.isdigit() or int(id) < 1:
-            raise NotFound("Film id must be a positive integer: %s" % id)
-        film = Film(int(id))
-        try:
-            row = film.get(self.db)
-        except Exception as exc:
-            return render('film/edit.html', id=film.id,
-                          errors={None: self.db_error(exc)})
-        if not row:
-            raise NotFound("Film %d not found " % film.id)
-        return render('film/edit.html', id=film.id, title=film.title,
-                      release_year=film.release_year)
-
-    def save(self, **formdata):
-        "Saves the film data submitted from ``default``"
-        form = FilmForm(**formdata)
-        form.validate()
-        errors = form.errors
+@app.route('/film/create', methods=['POST'])
+def create():
+    "Saves the film data submitted from ``new``"
+    form = FilmForm(**request.form)
+    form.validate()
+    errors = form.errors
+    if not errors:
         film = Film(form.id, form.title, form.release_year)
-        if not errors:
-            try:
-                film.update(self.db)
-            except Exception as exc:
-                errors = {None: self.db_error(exc)}
-            else:
-                self.db.commit()
-        if errors:
-            return render('film/edit.html', id=film.id, title=film.title,
-                          release_year=film.release_year, errors=errors)
-        raise Redirect('/film/')
-
-    def delete_conf(self, id=None):
-        "Request confirmation before deleting an existing film by id"
-        if not id or not id.isdigit() or int(id) < 1:
-            raise NotFound("Film id must be a positive integer: %s" % id)
-        film = Film(int(id))
         try:
-            row = film.get(self.db)
+            film.insert(g.db)
         except Exception as exc:
-            return render('film/edit.html', id=film.id,
-                          errors={None: self.db_error(exc)})
-        if not row:
-            raise NotFound("Film %d not found " % film.id)
-        return render('film/delete.html', id=film.id, film="%r" % (film))
-
-    def delete(self, id=None):
-        "Deletes an existing film by id"
-        if not id or not id.isdigit() or int(id) < 1:
-            raise NotFound("Film id must be a positive integer: %s" % id)
-        film = Film(int(id))
-        try:
-            row = film.get(self.db)
-        except Exception as exc:
-            return render('film/edit.html', id=film.id,
-                          errors={None: self.db_error(exc)})
-        if not row:
-            raise NotFound("Film %d not found " % film.id)
-        try:
-            film.delete(self.db)
-        except Exception as exc:
-            return render('film/delete.html', id=film.id, film="%r" % film,
-                          errors={None: self.db_error(exc)})
+            errors = {None: db_error(exc)}
         else:
-            self.db.commit()
-        raise Redirect('/film/')
+            g.db.commit()
+    if errors:
+        return render_template('film/new.html', id=form.id, title=form.title,
+                      release_year=form.release_year, errors=errors)
+    return redirect('/film/')
+
+
+@app.route('/film/')
+def list():
+    "Lists all films"
+    errors = {}
+    try:
+        film_list = Film().all(g.db)
+    except Exception as exc:
+        film_list = []
+        errors = {None: db_error(exc)}
+    return render_template('film/list.html', films=film_list, errors=errors)
+
+
+@app.route('/film/<int:id>')
+def edit(id):
+    "Displays a form for editing a film by id"
+    if id < 1:
+        abort(404)
+    film = Film(int(id))
+    try:
+        row = film.get(g.db)
+    except Exception as exc:
+        return render_template('film/edit.html', id=film.id,
+                      errors={None: db_error(exc)})
+    if not row:
+        abort(404)
+    return render_template('film/edit.html', id=film.id, title=film.title,
+                  release_year=film.release_year)
+
+
+@app.route('/film/save/<int:id>', methods=['POST'])
+def save(id):
+    "Saves the film data submitted from ``default``"
+    form = FilmForm(**request.form)
+    form.validate()
+    errors = form.errors
+    film = Film(form.id, form.title, form.release_year)
+    if not errors:
+        try:
+            film.update(g.db)
+        except Exception as exc:
+            errors = {None: db_error(exc)}
+        else:
+            g.db.commit()
+    if errors:
+        return render_template('film/edit.html', id=film.id, title=film.title,
+                      release_year=film.release_year, errors=errors)
+    return redirect('/film/')
+
+
+@app.route('/film/delete/<int:id>', methods=['GET', 'POST'])
+def delete(id=None):
+    "Deletes an existing film by id"
+    if id < 1:
+        abort(404)
+    film = Film(int(id))
+    try:
+        row = film.get(g.db)
+    except Exception as exc:
+        return render_template('film/edit.html', id=film.id,
+                      errors={None: db_error(exc)})
+    if not row:
+        abort(404)
+    if request.method != 'POST':
+        return render_template('film/delete.html', id=film.id,
+                               film="%r" % (film))
+    try:
+        film.delete(g.db)
+    except Exception as exc:
+        return render_template('film/delete.html', id=film.id,
+                               film="%r" % film, errors={None: db_error(exc)})
+    else:
+        g.db.commit()
+    return redirect('/film/')
