@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 
 
 env = Environment(loader=FileSystemLoader(os.path.join(
-            os.path.abspath(os.path.dirname(__file__)), 'templates')))
+            os.path.dirname(os.path.abspath(__file__)), 'templates')))
 
 
 def render(filename, *args, **data):

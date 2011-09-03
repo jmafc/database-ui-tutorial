@@ -1,8 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import os
-import cgi
+import os.path
 from optparse import OptionParser
 
 import cherrypy
@@ -37,10 +36,9 @@ if __name__ == '__main__':
 
     cherrypy.config.update(
         {'error_page.404': error404,
-         'tools.staticdir.root':
-             os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                          'static'),
          'tools.staticdir.on': True,
+         'tools.staticdir.root': os.path.join(os.path.dirname(
+                    os.path.abspath(__file__)), 'static'),
          'tools.staticdir.dir': ''})
 
     cherrypy.tree.mount(DatabaseApp(args[0]), '/', 'dbapp.conf')
