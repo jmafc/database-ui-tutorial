@@ -3,6 +3,7 @@
 import os.path
 
 from jinja2 import Environment, FileSystemLoader
+from werkzeug.wrappers import Response
 
 
 env = Environment(loader=FileSystemLoader(os.path.join(
@@ -11,4 +12,4 @@ env = Environment(loader=FileSystemLoader(os.path.join(
 
 def render(filename, *args, **data):
     template = env.get_template(filename)
-    return str(template.render(*args, **data))
+    return Response(template.render(*args, **data), mimetype='text/html')

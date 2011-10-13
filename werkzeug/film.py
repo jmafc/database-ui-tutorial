@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from werkzeug.routing import Map, Rule
+from werkzeug.exceptions import NotFound
+from werkzeug.utils import redirect
+
 from templating import render
-from errors import NotFound, Redirect
 from bl.film import Film
 
 
@@ -28,41 +31,46 @@ class FilmForm(object):
 class FilmHandler(object):
     def __init__(self, dbconn):
         self.db = dbconn
+        self.url_map = Map([
+                Rule('/films', endpoint='index'),
+                Rule('/film/new', endpoint='new'),
+                Rule('/film/<int:id>', endpoint='edit')
+                ])
 
-    def dispatch(self, path, request):
+    def dispatch(self, request):
+        path = request.path
         params = {}
+        if path[:5] != '/film':
+            raise Exception
+        path = path[5:]
         if path == '/':
             func = self.index
         elif path == '/new':
             func = self.new
         elif path == '/create':
             func = self.create
-            params = request.vars
+            params = request.form
         elif path.startswith('/save/'):
             func = self.save
-            params = {'id': path[6:]}
-            params.update(request.vars)
+            params = request.form
         elif path.startswith('/delete/'):
             params = {'id': path[8:]}
-            if request.method == 'GET':
-                func = self.delete_conf
-            else:
-                func = self.delete
+            func = self.delete
         elif path.startswith('/'):
             func = self.edit
             params = {'id': path[1:]}
         else:
-            raise NotFound
-        return (func, params)
+            raise NotFound()
+        return func(request, **params)
 
     def db_error(self, exc):
         return 'A database error has occurred: %s' % exc.args[0]
 
-    def new(self):
+    def new(self, request):
         "Displays a form to input a new film"
         return render('film/new.html', id='')
 
-    def create(self, **formdata):
+    def create(self, request, **formdata):
         "Saves the film data submitted from ``new``"
         form = FilmForm(**formdata)
         form.validate()
@@ -78,9 +86,9 @@ class FilmHandler(object):
         if errors:
             return render('film/new.html', id=form.id, title=form.title,
                           release_year=form.release_year, errors=errors)
-        raise Redirect('/film/')
+        return redirect('/film/')
 
-    def index(self):
+    def index(self, request):
         "Lists all films"
         errors = {}
         try:
@@ -90,7 +98,7 @@ class FilmHandler(object):
             errors = {None: self.db_error(exc)}
         return render('film/list.html', films=film_list, errors=errors)
 
-    def edit(self, id):
+    def edit(self, request, id):
         "Displays a form for editing a film by id"
         if not id or not id.isdigit() or int(id) < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
@@ -105,7 +113,7 @@ class FilmHandler(object):
         return render('film/edit.html', id=film.id, title=film.title,
                       release_year=film.release_year)
 
-    def save(self, **formdata):
+    def save(self, request, **formdata):
         "Saves the film data submitted from ``default``"
         form = FilmForm(**formdata)
         form.validate()
@@ -121,23 +129,9 @@ class FilmHandler(object):
         if errors:
             return render('film/edit.html', id=film.id, title=film.title,
                           release_year=film.release_year, errors=errors)
-        raise Redirect('/film/')
+        return redirect('/film/')
 
-    def delete_conf(self, id=None):
-        "Request confirmation before deleting an existing film by id"
-        if not id or not id.isdigit() or int(id) < 1:
-            raise NotFound("Film id must be a positive integer: %s" % id)
-        film = Film(int(id))
-        try:
-            row = film.get(self.db)
-        except Exception as exc:
-            return render('film/edit.html', id=film.id,
-                          errors={None: self.db_error(exc)})
-        if not row:
-            raise NotFound("Film %d not found " % film.id)
-        return render('film/delete.html', id=film.id, film="%r" % (film))
-
-    def delete(self, id=None):
+    def delete(self, request, id=None):
         "Deletes an existing film by id"
         if not id or not id.isdigit() or int(id) < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
@@ -149,6 +143,8 @@ class FilmHandler(object):
                           errors={None: self.db_error(exc)})
         if not row:
             raise NotFound("Film %d not found " % film.id)
+        if request.method != 'POST':
+            return render('film/delete.html', id=film.id, film="%r" % (film))
         try:
             film.delete(self.db)
         except Exception as exc:
@@ -156,4 +152,4 @@ class FilmHandler(object):
                           errors={None: self.db_error(exc)})
         else:
             self.db.commit()
-        raise Redirect('/film/')
+        return redirect('/film/')

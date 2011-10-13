@@ -18,6 +18,8 @@ class Film(object):
         except Exception as exc:
             raise exc
         db.rollback()
+        if not row:
+            return None
         self.title = row['title']
         self.release_year = row['release_year']
         return self
