@@ -1,0 +1,7 @@
+{% import "forms.html" as form %}
+<fieldset>
+  {{ form.text('id', "Id", '10', value=id, readonly=edit, errors=errors) }}
+  {{ form.text('title', "Title", '64', value=title, errors=errors) }}
+  {{ form.text('release_year', "Release Year", '10', value=release_year,
+               errors=errors) }}
+</fieldset>
