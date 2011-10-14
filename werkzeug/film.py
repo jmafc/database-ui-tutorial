@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from werkzeug.routing import Map, Rule
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.utils import redirect
 
 from templating import render
@@ -32,36 +32,23 @@ class FilmHandler(object):
     def __init__(self, dbconn):
         self.db = dbconn
         self.url_map = Map([
-                Rule('/films', endpoint='index'),
+                Rule('/film/', endpoint='index'),
                 Rule('/film/new', endpoint='new'),
-                Rule('/film/<int:id>', endpoint='edit')
+                Rule('/film/create', endpoint='create'),
+                Rule('/film/<int:id>', endpoint='edit'),
+                Rule('/film/save/<int:id>', endpoint='save'),
+                Rule('/film/delete/<int:id>', endpoint='delete')
                 ])
 
     def dispatch(self, request):
-        path = request.path
-        params = {}
-        if path[:5] != '/film':
-            raise Exception
-        path = path[5:]
-        if path == '/':
-            func = self.index
-        elif path == '/new':
-            func = self.new
-        elif path == '/create':
-            func = self.create
-            params = request.form
-        elif path.startswith('/save/'):
-            func = self.save
-            params = request.form
-        elif path.startswith('/delete/'):
-            params = {'id': path[8:]}
-            func = self.delete
-        elif path.startswith('/'):
-            func = self.edit
-            params = {'id': path[1:]}
-        else:
-            raise NotFound()
-        return func(request, **params)
+        adapter = self.url_map.bind_to_environ(request.environ)
+        try:
+            endpoint, values = adapter.match()
+            return getattr(self, endpoint)(request, **values)
+        except NotFound as exc:
+            raise exc
+        except HTTPException as exc:
+            return exc
 
     def db_error(self, exc):
         return 'A database error has occurred: %s' % exc.args[0]
@@ -70,9 +57,9 @@ class FilmHandler(object):
         "Displays a form to input a new film"
         return render('film/new.html', id='')
 
-    def create(self, request, **formdata):
+    def create(self, request):
         "Saves the film data submitted from ``new``"
-        form = FilmForm(**formdata)
+        form = FilmForm(**request.form)
         form.validate()
         errors = form.errors
         if not errors:
@@ -100,7 +87,7 @@ class FilmHandler(object):
 
     def edit(self, request, id):
         "Displays a form for editing a film by id"
-        if not id or not id.isdigit() or int(id) < 1:
+        if id < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
         film = Film(int(id))
         try:
@@ -113,9 +100,9 @@ class FilmHandler(object):
         return render('film/edit.html', id=film.id, title=film.title,
                       release_year=film.release_year)
 
-    def save(self, request, **formdata):
+    def save(self, request, id=None):
         "Saves the film data submitted from ``default``"
-        form = FilmForm(**formdata)
+        form = FilmForm(**request.form)
         form.validate()
         errors = form.errors
         film = Film(form.id, form.title, form.release_year)
@@ -133,7 +120,7 @@ class FilmHandler(object):
 
     def delete(self, request, id=None):
         "Deletes an existing film by id"
-        if not id or not id.isdigit() or int(id) < 1:
+        if id < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
         film = Film(int(id))
         try:

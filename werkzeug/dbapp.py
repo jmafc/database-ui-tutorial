@@ -4,8 +4,9 @@
 import os
 from optparse import OptionParser
 
+from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.wsgi import SharedDataMiddleware
 
 from dblib import DbConnection
@@ -17,7 +18,12 @@ from film import FilmHandler
 class DatabaseApp(object):
     def __init__(self, dbname):
         self.dbconn = DbConnection(dbname)
-        self.handler = FilmHandler(self.dbconn)
+        self.film = FilmHandler(self.dbconn)
+        self.url_map = Map([
+                Rule('/', endpoint='index'),
+                Rule('/film/', endpoint='film'),
+                Rule('/film/<path:parts>', endpoint='film')
+                ])
 
     def index(self, request):
         return render('home.html')
@@ -26,20 +32,23 @@ class DatabaseApp(object):
         return render('error/404.html', msg=str(msg))
 
     def dispatch(self, request):
-        if request.path == '/':
-            return self.index(request)
-        elif request.path.startswith('/film/'):
-            return self.handler.dispatch(request)
-        else:
-            raise NotFound()
-
-    def wsgi_app(self, environ, start_response):
-        req = Request(environ)
+        adapter = self.url_map.bind_to_environ(request.environ)
         try:
-            response = self.dispatch(req)
+            endpoint, values = adapter.match()
+            if endpoint == 'index':
+                return getattr(self, endpoint)(request, **values)
+            else:
+                return self.film.dispatch(request)
         except NotFound as exc:
             response = self.error404(exc.description)
             response.status_code = 404
+            return response
+        except HTTPException as exc:
+            return exc
+
+    def wsgi_app(self, environ, start_response):
+        req = Request(environ)
+        response = self.dispatch(req)
         return response(environ, start_response)
 
     def __call__(self, environ, start_response):
