@@ -21,7 +21,7 @@ class DatabaseApp(object):
         self.film = FilmHandler(self.dbconn)
         self.url_map = Map([
                 Rule('/', endpoint='index'),
-                Rule('/film/', endpoint='film'),
+                Rule('/films', endpoint='film'),
                 Rule('/film/<path:parts>', endpoint='film')
                 ])
 

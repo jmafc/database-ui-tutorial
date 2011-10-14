@@ -32,12 +32,12 @@ class FilmHandler(object):
     def __init__(self, dbconn):
         self.db = dbconn
         self.url_map = Map([
-                Rule('/film/', endpoint='index'),
+                Rule('/films', endpoint='index'),
                 Rule('/film/new', endpoint='new'),
                 Rule('/film/create', endpoint='create'),
                 Rule('/film/<int:id>', endpoint='edit'),
-                Rule('/film/save/<int:id>', endpoint='save'),
-                Rule('/film/delete/<int:id>', endpoint='delete')
+                Rule('/film/<int:id>/save', endpoint='save'),
+                Rule('/film/<int:id>/delete', endpoint='delete')
                 ])
 
     def dispatch(self, request):
@@ -73,7 +73,7 @@ class FilmHandler(object):
         if errors:
             return render('film/new.html', id=form.id, title=form.title,
                           release_year=form.release_year, errors=errors)
-        return redirect('/film/')
+        return redirect('/films')
 
     def index(self, request):
         "Lists all films"
@@ -116,7 +116,7 @@ class FilmHandler(object):
         if errors:
             return render('film/edit.html', id=film.id, title=film.title,
                           release_year=film.release_year, errors=errors)
-        return redirect('/film/')
+        return redirect('/films')
 
     def delete(self, request, id=None):
         "Deletes an existing film by id"
@@ -139,4 +139,4 @@ class FilmHandler(object):
                           errors={None: self.db_error(exc)})
         else:
             self.db.commit()
-        return redirect('/film/')
+        return redirect('/films')
