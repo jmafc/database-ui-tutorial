@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from psycopg2 import DatabaseError
+
 
 class Film(object):
     def __init__(self, id=0, title='', release_year=0):
@@ -41,6 +43,8 @@ class Film(object):
                 "(%(id)s, %(title)s, %(release_year)s)", self.__dict__)
         except Exception as exc:
             raise exc
+        if curs.rowcount != 1:
+            raise DatabaseError("Failed to add film with id %d" % self.id)
         curs.close()
 
     def update(self, db):
@@ -50,6 +54,8 @@ class Film(object):
                 "WHERE id = %s", (self.title, self.release_year, self.id))
         except Exception as exc:
             raise exc
+        if curs.rowcount != 1:
+            raise DatabaseError("Failed to update film with id %d" % self.id)
         curs.close()
 
     def delete(self, db):
@@ -57,4 +63,6 @@ class Film(object):
             curs = db.execute("DELETE FROM film WHERE id = %s", (self.id,))
         except Exception as exc:
             raise exc
+        if curs.rowcount != 1:
+            raise DatabaseError("Failed to delete film with id %d" % self.id)
         curs.close()
