@@ -8,8 +8,6 @@ from psycopg2 import connect
 from psycopg2.extras import DictConnection
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from dblib import DbConnection
-
 
 def pgconnect(dbname, user, host, port):
     "Connect to a Postgres database using psycopg2"
@@ -151,7 +149,3 @@ class DbAppTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.db.close()
-
-    def connection(self):
-        return DbConnection(self.db.name, self.db.user, self.db.host,
-                            self.db.port)
