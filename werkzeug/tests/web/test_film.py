@@ -19,7 +19,7 @@ class WebFilmTestCase(DbAppTestCase):
 
     def setUp(self):
         self.db.execute_commit("TRUNCATE TABLE film")
-        self.client = Client(create_app('dbapp_testdb'), BaseResponse)
+        self.client = Client(create_app(self.db.name), BaseResponse)
         self.key = TEST_DATA['id']
 
     def insert_one(self):
