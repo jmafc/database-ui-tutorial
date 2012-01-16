@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
-
-from psycopg2 import connect, DatabaseError
+from psycopg2 import connect
 from psycopg2.extensions import register_type, UNICODE
 from psycopg2.extras import DictConnection
 

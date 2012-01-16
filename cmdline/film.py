@@ -123,7 +123,7 @@ class FilmHandler(object):
         errors = {}
         film = Film(form.id, form.title, form.release_year)
         try:
-            film.update(self.db)
+            film.update(self.db, old_film)
         except Exception as exc:
             errors = {None: self.db_error(exc)}
         else:
