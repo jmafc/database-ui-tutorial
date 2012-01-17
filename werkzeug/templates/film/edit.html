@@ -10,6 +10,7 @@
   {% endif %}
   <form class="mainform" name="chgfilm" action="/film/{{ id }}/save"
         method="post">
+    <input type="hidden" name="rowver" value="{{ rowver }}" />
     {%- set edit = true -%}
     {% include "film/fields.html" %}
     <div class="submit-btn">

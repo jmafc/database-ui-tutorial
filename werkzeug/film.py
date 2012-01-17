@@ -10,7 +10,7 @@ from bl.film import Film
 
 class FilmForm(object):
     def __init__(self, **data):
-        for attr in ['id', 'title', 'release_year']:
+        for attr in ['rowver', 'id', 'title', 'release_year']:
             if attr in data:
                 setattr(self, attr, data.get(attr, 0)[0])
             else:
@@ -68,8 +68,7 @@ class FilmHandler(object):
                 film.insert(self.db)
             except Exception as exc:
                 errors = {None: self.db_error(exc)}
-            else:
-                self.db.commit()
+            self.db.commit()
         if errors:
             return render('film/new.html', id=form.id, title=form.title,
                           release_year=form.release_year, errors=errors)
@@ -98,24 +97,25 @@ class FilmHandler(object):
         if not row:
             raise NotFound("Film %d not found " % film.id)
         return render('film/edit.html', id=film.id, title=film.title,
-                      release_year=film.release_year)
+                      release_year=film.release_year, rowver=film.rowver)
 
     def save(self, request, id=None):
-        "Saves the film data submitted from ``default``"
+        "Saves the film data submitted from ``edit``"
         form = FilmForm(**request.form)
         form.validate()
         errors = form.errors
-        film = Film(form.id, form.title, form.release_year)
+        film = Film(int(form.id), form.title, int(form.release_year))
+        film.rowver = int(form.rowver)
         if not errors:
             try:
-                film.update(self.db)
+                film.update(self.db, film)
             except Exception as exc:
                 errors = {None: self.db_error(exc)}
-            else:
-                self.db.commit()
+            self.db.commit()
         if errors:
             return render('film/edit.html', id=film.id, title=film.title,
-                          release_year=film.release_year, errors=errors)
+                          release_year=film.release_year, rowver=film.rowver,
+                          errors=errors)
         return redirect('/films')
 
     def delete(self, request, id=None):
@@ -133,10 +133,9 @@ class FilmHandler(object):
         if request.method != 'POST':
             return render('film/delete.html', id=film.id, film="%r" % (film))
         try:
-            film.delete(self.db)
+            row.delete(self.db)
         except Exception as exc:
-            return render('film/delete.html', id=film.id, film="%r" % film,
+            return render('film/delete.html', id=row.id, film="%r" % row,
                           errors={None: self.db_error(exc)})
-        else:
-            self.db.commit()
+        self.db.commit()
         return redirect('/films')

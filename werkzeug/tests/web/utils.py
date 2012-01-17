@@ -50,7 +50,8 @@ TEST_HOST = os.environ.get("DBAPP_TEST_HOST", None)
 TEST_PORT = os.environ.get("DBAPP_TEST_PORT", None)
 ADMIN_DB = os.environ.get("DBAPP_ADMIN_DB", 'postgres')
 CREATE_DDL = "CREATE DATABASE %s TEMPLATE = template0"
-YAML_SPEC = os.path.normpath(os.path.join(os.getcwd(), '../../../film.yaml'))
+YAML_SPEC = os.path.normpath(os.path.join(os.path.dirname(__file__),
+                                          '../../../film.yaml'))
 
 
 class PostgresDb(object):

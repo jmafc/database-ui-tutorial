@@ -50,7 +50,7 @@ class BLFilmTestCase(DbAppTestCase):
         db = self.connection()
         film = Film(self.key).get(db)
         film.title = "A test movie - changed"
-        film.update(db)
+        film.update(db, film)
         db.commit()
         row = self.get_one()
         self.assertEqual(row['title'], film.title)
@@ -62,7 +62,7 @@ class BLFilmTestCase(DbAppTestCase):
         film = Film(self.key).get(db)
         self.delete_one()
         film.title = "A test movie - changed"
-        self.assertRaises(DatabaseError, film.update, db)
+        self.assertRaises(DatabaseError, film.update, db, film)
 
     def test_delete(self):
         "Delete a film"

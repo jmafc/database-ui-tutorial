@@ -27,7 +27,7 @@ class WebFilmTestCase(DbAppTestCase):
                                "%(title)s, %(release_year)s)", (TEST_DATA))
 
     def get_one(self):
-        return self.db.fetchone("SELECT * FROM film WHERE id = %s",
+        return self.db.fetchone("SELECT xmin, * FROM film WHERE id = %s",
                                 (self.key,))
 
     def test_new(self):
@@ -91,11 +91,13 @@ class WebFilmTestCase(DbAppTestCase):
                          self.key)
         self.assertEqual(form.getAttribute('method'), 'post')
         inp = dom.getElementsByTagName('input')[0]
+        self.assertEqual(inp.getAttribute('type'), 'hidden')
+        inp = dom.getElementsByTagName('input')[1]
         self.assertTrue(inp.hasAttribute('readonly'))
         self.assertEqual(inp.getAttribute('value'), str(TEST_DATA['id']))
-        inp = dom.getElementsByTagName('input')[1]
-        self.assertEqual(inp.getAttribute('value'), TEST_DATA['title'])
         inp = dom.getElementsByTagName('input')[2]
+        self.assertEqual(inp.getAttribute('value'), TEST_DATA['title'])
+        inp = dom.getElementsByTagName('input')[3]
         self.assertEqual(inp.getAttribute('value'),
                          str(TEST_DATA['release_year']))
 
@@ -110,6 +112,7 @@ class WebFilmTestCase(DbAppTestCase):
         self.insert_one()
         data = TEST_DATA
         data.update(title="A test movie - changed")
+        data.update(rowver=self.get_one()['xmin'])
         resp = self.client.post(path='/film/%d/save' % self.key, data=data)
         row = self.get_one()
         self.assertEqual(row['title'], data['title'])
