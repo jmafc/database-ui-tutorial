@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Request
@@ -65,13 +65,12 @@ def create_app(dbname=''):
 if __name__ == '__main__':
     from werkzeug.serving import run_simple
 
-    parser = OptionParser("usage: %prog [options] dbname")
-    parser.add_option('-p', '--port', dest='port', type='int',
-                      help="port number to listen to (default %default)")
+    parser = ArgumentParser(description="Database application")
+    parser.add_argument('dbname', help='database name')
+    parser.add_argument('-p', '--port', type=int,
+                        help="port number to listen to (default %(default)s)")
     parser.set_defaults(port=8080)
-    (options, args) = parser.parse_args()
-    if len(args) != 1:
-        parser.error("Database name not specified")
+    args = parser.parse_args()
 
-    run_simple('127.0.0.1', options.port, create_app(args[0]),
+    run_simple('127.0.0.1', args.port, create_app(args.dbname),
                use_debugger=True, use_reloader=True)
