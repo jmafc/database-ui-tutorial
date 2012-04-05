@@ -115,6 +115,19 @@ class BLFilmTestCase(DbAppTestCase):
         films = Film().all(db)
         self.assertEqual(len(films), 0)
 
+    def test_get_slice(self):
+        "Get a slice of rows"
+        self.db.execute_commit(
+            "INSERT INTO film SELECT i AS id, 'Movie ' || i AS title, "
+            "1900 + i AS release_year FROM generate_series(1, 100) i")
+        db = self.connection()
+        numrows = Film().count(db)
+        films = Film().slice(db, 10, 30)
+        self.assertEqual(numrows, 100)
+        self.assertEqual(len(films), 10)
+        self.assertEqual(films[0].id, 31)
+        self.assertEqual(films[9].release_year, 1940)
+
 
 def suite():
     tests = unittest.TestLoader().loadTestsFromTestCase(BLFilmTestCase)

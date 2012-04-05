@@ -144,6 +144,23 @@ class WebFilmTestCase(DbAppTestCase):
         resp = self.client.post(path='/film/%d/delete' % self.key)
         self.assertEqual(resp.status_code, 404)
 
+    def test_list(self):
+        "Select fifth page of list of films"
+        self.db.execute_commit(
+            "INSERT INTO film SELECT i AS id, 'Movie ' || i AS title, "
+            "1900 + i AS release_year FROM generate_series(1, 100) i")
+        resp = self.client.post(path='/films?p=5')
+        self.assertEqual(resp.status_code, 200)
+        dom = parseString(resp.data)
+        th = dom.getElementsByTagName('th')[1]
+        self.assertEqual(th.childNodes[0].childNodes[0].data,
+                         'Movie 41 - 1941')
+        span1 = dom.getElementsByTagName('span')[0]
+        self.assertEqual(span1.getAttribute('class'), 'this-page')
+        self.assertEqual(span1.childNodes[0].data, '5')
+        span2 = dom.getElementsByTagName('span')[1]
+        self.assertEqual(span2.childNodes[0].data, '100 films')
+
 
 def suite():
     tests = unittest.TestLoader().loadTestsFromTestCase(WebFilmTestCase)

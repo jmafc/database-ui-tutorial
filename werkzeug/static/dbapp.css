@@ -18,6 +18,17 @@
     line-height: 22px;
     border: 1px solid #ccc;
 }
+.paginate a:link, .paginate a:visited {
+    border: 1px solid #ccc;
+    padding: 2px 6px;
+}
+.paginate #count {
+    padding: 12px;
+}
+.this-page {
+    padding: 2px 6px;
+    font-weight: bold;
+}
 fieldset {
     border: 1px solid #ccc;
     margin-bottom: 0.5em;

@@ -76,12 +76,19 @@ class FilmHandler(object):
     def index(self, request):
         "Lists all films"
         errors = {}
+        p = int(request.args.get('p', 1))
+        maxlines = 10
         try:
-            film_list = Film().all(self.db)
+            film = Film()
+            numrows = film.count(self.db)
+            film_list = film.slice(self.db, maxlines, (p - 1) * maxlines)
         except Exception as exc:
+            numrows = 0
             film_list = []
             errors = {None: self.db_error(exc)}
-        return render('film/list.html', films=film_list, errors=errors)
+        return render('film/list.html', films=film_list, curr_page=p,
+                      numrows=numrows, numpages=numrows / maxlines + 1,
+                      errors=errors)
 
     def edit(self, request, id):
         "Displays a form for editing a film by id"

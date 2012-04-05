@@ -38,6 +38,26 @@ class Film(object):
         db.rollback()
         return [Film(r['id'], r['title'], r['release_year']) for r in rows]
 
+    @classmethod
+    def slice(cls, db, limit='ALL', offset=0):
+        try:
+            rows = db.fetchall(
+                "SELECT id, title, release_year FROM film ORDER BY id "
+                "LIMIT %s OFFSET %d" % (limit, offset))
+        except Exception as exc:
+            raise exc
+        db.rollback()
+        return [Film(r['id'], r['title'], r['release_year']) for r in rows]
+
+    @classmethod
+    def count(cls, db):
+        try:
+            row = db.fetchone("SELECT COUNT(*) FROM film")
+        except Exception as exc:
+            raise exc
+        db.rollback()
+        return row[0]
+
     def insert(self, db):
         try:
             curs = db.execute(

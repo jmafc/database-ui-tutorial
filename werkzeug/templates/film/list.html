@@ -23,7 +23,14 @@
     </tbody>
   </table>
   <p class="paginate">
-    {{ films|length }} films
+    {%- for i in range(1, numpages + 1) -%}
+      {% if curr_page == i -%}
+        <span class="this-page">{{ i }}</span>
+      {% else -%}
+        <a href="?p={{ i }}">{{ i }}</a>
+      {% endif -%}
+    {% endfor -%}
+    <span id="count">{{ numrows }} films</span>
   </p>
 </div>
 {% endblock %}
