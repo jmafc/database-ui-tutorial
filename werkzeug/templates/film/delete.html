@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block page_title %}Are you sure?{% endblock %}
 {% block content %}
+{%- if errors %}
+<p class="errmsg">Please correct the following errors:</p>
+  {%- if None in errors %}
+    <div class="errmsg">{{ errors[None] }}</div>
+  {% endif -%}
+{% endif %}
 <p>Are you sure you want to delete the film "{{ film|e }}"?
   All of the following related items will be deleted:</p>
 <ul>
