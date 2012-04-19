@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 from argparse import ArgumentParser
 
 from werkzeug.routing import Map, Rule
@@ -9,14 +10,17 @@ from werkzeug.wrappers import Request
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.wsgi import SharedDataMiddleware
 
-from dblib import DbConnection
-from templating import render
+from pyrseas.lib.dbconn import DbConnection
 
+from templating import render
 from film import FilmHandler
 
 
 class DatabaseApp(object):
     def __init__(self, dbname):
+        if sys.version < '3':
+            from psycopg2.extensions import register_type, UNICODE
+            register_type(UNICODE)
         self.dbconn = DbConnection(dbname)
         self.film = FilmHandler(self.dbconn)
         self.url_map = Map([

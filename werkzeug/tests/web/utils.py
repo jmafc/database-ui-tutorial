@@ -137,11 +137,10 @@ class DbAppTestCase(TestCase):
     def setUpClass(cls):
         import yaml
         from pyrseas.database import Database
-        from pyrseas.dbconn import DbConnection as PyrDbConn
 
         cls.db = PostgresDb(TEST_DBNAME, TEST_USER, TEST_HOST, TEST_PORT)
         cls.db.connect()
-        db = Database(PyrDbConn(TEST_DBNAME, TEST_USER, TEST_HOST, TEST_PORT))
+        db = Database(TEST_DBNAME, TEST_USER, None, TEST_HOST, TEST_PORT)
         stmts = db.diff_map(yaml.load(open(YAML_SPEC)))
         for stmt in stmts:
             cls.db.execute(stmt)

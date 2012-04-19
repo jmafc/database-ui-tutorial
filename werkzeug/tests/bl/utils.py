@@ -8,7 +8,7 @@ from psycopg2 import connect
 from psycopg2.extras import DictConnection
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from dblib import DbConnection
+from pyrseas.lib.dbconn import DbConnection
 
 
 def pgconnect(dbname, user, host, port):
@@ -139,11 +139,10 @@ class DbAppTestCase(TestCase):
     def setUpClass(cls):
         import yaml
         from pyrseas.database import Database
-        from pyrseas.dbconn import DbConnection as PyrDbConn
 
         cls.db = PostgresDb(TEST_DBNAME, TEST_USER, TEST_HOST, TEST_PORT)
         cls.db.connect()
-        db = Database(PyrDbConn(TEST_DBNAME, TEST_USER, TEST_HOST, TEST_PORT))
+        db = Database(TEST_DBNAME, TEST_USER, None, TEST_HOST, TEST_PORT)
         stmts = db.diff_map(yaml.load(open(YAML_SPEC)))
         for stmt in stmts:
             cls.db.execute(stmt)
@@ -154,5 +153,5 @@ class DbAppTestCase(TestCase):
         cls.db.close()
 
     def connection(self):
-        return DbConnection(self.db.name, self.db.user, self.db.host,
+        return DbConnection(self.db.name, self.db.user, None, self.db.host,
                             self.db.port)
