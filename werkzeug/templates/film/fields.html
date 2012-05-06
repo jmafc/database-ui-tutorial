@@ -1,7 +1,5 @@
 {% import "forms.html" as form %}
 <fieldset>
-  {{ form.text('id', "Id", '10', value=film.id, readonly=edit,
-               errors=errors) }}
   {{ form.text('title', "Title", '64', value=film.title, errors=errors) }}
   {{ form.text('release_year', "Release Year", '10', value=film.release_year,
                errors=errors) }}

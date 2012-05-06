@@ -8,13 +8,13 @@
       <div class="errmsg">{{ errors[None] }}</div>
     {% endif %}
   {% endif %}
-  <form class="mainform" name="chgfilm" action="/film/{{ film.id }}/save"
+  <form class="mainform" name="chgfilm" action="/film/{{ id }}/save"
         method="post">
     <input type="hidden" name="rowver" value="{{ film.rowver }}" />
     {%- set edit = true -%}
     {% include "film/fields.html" %}
     <div class="submit-btn">
-      <p class="delbox"><a href="/film/{{ film.id }}/delete">Delete</a></p>
+      <p class="delbox"><a href="/film/{{ id }}/delete">Delete</a></p>
       <input type="submit" name="save" value="Save" />
     </div>
   </form>

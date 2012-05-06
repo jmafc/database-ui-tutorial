@@ -15,11 +15,18 @@ class BLFilmTestCase(DbAppTestCase):
 
     def setUp(self):
         self.db.execute_commit("TRUNCATE TABLE film")
-        self.key = 123
+        self.db.execute_commit("ALTER SEQUENCE film_id_seq RESTART 1")
+        self.key = 1
 
     def insert_one(self):
-        self.db.execute_commit("INSERT INTO film VALUES (%s, %s, %s)",
-                (self.key, "A test movie", 1929))
+        self.db.execute_commit("INSERT INTO film (title, release_year) "
+                               "VALUES (%s, %s)", ("A test movie", 1929))
+
+    def insert_100(self):
+        self.db.execute_commit(
+            "INSERT INTO film (title, release_year) "
+            "SELECT 'Movie ' || i AS title, 1900 + i AS release_year "
+            "FROM generate_series(1, 100) i")
 
     def delete_one(self):
         self.db.execute_commit("DELETE FROM film WHERE id = %s", (self.key,))
@@ -98,13 +105,13 @@ class BLFilmTestCase(DbAppTestCase):
 
     def test_get_several(self):
         "Get several films"
-        self.db.execute_commit("INSERT INTO film VALUES (%s, %s, %s)",
-                (678, "A third movie", 1978))
-        self.db.execute_commit("INSERT INTO film VALUES (%s, %s, %s)",
-                (345, "A second movie", 1945))
         self.insert_one()
+        self.db.execute("INSERT INTO film (title, release_year) "
+                               "VALUES (%s, %s)", ("A second movie", 1945))
+        self.db.execute_commit("INSERT INTO film (title, release_year) "
+                               "VALUES (%s, %s)", ("A third movie", 1978))
         db = self.connection()
-        films = Film().all(db)
+        films = Film().subset(db)
         self.assertEqual(len(films), 3)
         self.assertEqual(films[0].title, "A test movie")
         self.assertEqual(films[2].release_year, 1978)
@@ -112,21 +119,36 @@ class BLFilmTestCase(DbAppTestCase):
     def test_get_none(self):
         "Get several films but find none"
         db = self.connection()
-        films = Film().all(db)
+        films = Film().subset(db)
         self.assertEqual(len(films), 0)
 
     def test_get_slice(self):
         "Get a slice of rows"
-        self.db.execute_commit(
-            "INSERT INTO film SELECT i AS id, 'Movie ' || i AS title, "
-            "1900 + i AS release_year FROM generate_series(1, 100) i")
+        self.insert_100()
         db = self.connection()
         numrows = Film().count(db)
-        films = Film().slice(db, 10, 30)
+        films = Film().subset(db, 10, 30)
         self.assertEqual(numrows, 100)
         self.assertEqual(len(films), 10)
-        self.assertEqual(films[0].id, 31)
+        self.assertEqual(films[0].title, 'Movie 31')
         self.assertEqual(films[9].release_year, 1940)
+
+    def test_search_title(self):
+        "Get a subset of rows by title"
+        self.insert_100()
+        db = self.connection()
+        films = Film().subset(db, qry_args={'title': '7'})
+        self.assertEqual(len(films), 19)
+        self.assertEqual(films[2].title, 'Movie 27')
+
+    def test_search_title_year(self):
+        "Get a subset of rows by title and year"
+        self.insert_100()
+        db = self.connection()
+        films = Film().subset(db, qry_args={'title': 'Movie 7',
+                                            'release_year': '> 1975'})
+        self.assertEqual(len(films), 4)
+        self.assertEqual(films[0].title, 'Movie 76')
 
 
 def suite():

@@ -1,5 +1,13 @@
 schema public:
   description: standard public schema
+  sequence film_id_seq:
+    cache_value: 1
+    increment_by: 1
+    max_value: null
+    min_value: null
+    owner_column: id
+    owner_table: film
+    start_value: 1
   table film:
     check_constraints:
       film_release_year_check:
@@ -8,6 +16,7 @@ schema public:
         expression: (release_year >= 1888)
     columns:
     - id:
+        default: nextval('film_id_seq'::regclass)
         not_null: true
         type: integer
     - title:
@@ -21,4 +30,10 @@ schema public:
         access_method: btree
         columns:
         - id
+    unique_constraints:
+      film_title_key:
+        access_method: btree
+        columns:
+        - title
+        - release_year
 

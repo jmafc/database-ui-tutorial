@@ -13,6 +13,15 @@
     clear: both;
     float: right;
 }
+.colhead {
+    background-color: #97b7e0;
+}
+.colhead a:link, .colhead a:visited {
+    color: #fff;
+}
+.colsrch {
+    background-color: #e0e0e0;
+}
 .paginate {
     padding: 10px 8px;
     line-height: 22px;

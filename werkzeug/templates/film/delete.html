@@ -2,7 +2,7 @@
 {% block page_title %}Are you sure?{% endblock %}
 {% block content %}
 {%- if errors %}
-<p class="errmsg">Please correct the following errors:</p>
+  <p class="errmsg">Please correct the following errors:</p>
   {%- if None in errors %}
     <div class="errmsg">{{ errors[None] }}</div>
   {% endif -%}

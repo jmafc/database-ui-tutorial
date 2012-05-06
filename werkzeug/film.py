@@ -19,8 +19,6 @@ class FilmForm(object):
 
     def validate(self):
         self.errors = {}
-        if not self.id.isdigit() or int(self.id) < 1:
-            self.errors['id'] = "Id must be a positive integer"
         if not self.title:
             self.errors['title'] = "Title cannot be an empty string"
         if not self.release_year.isdigit() or int(self.release_year) < 1888:
@@ -63,7 +61,7 @@ class FilmHandler(object):
         form.validate()
         errors = form.errors
         if not errors:
-            film = Film(form.id, form.title, form.release_year)
+            film = Film(title=form.title, release_year=form.release_year)
             try:
                 film.insert(self.db)
             except Exception as exc:
@@ -73,22 +71,36 @@ class FilmHandler(object):
             return render('film/new.html', film=form,  errors=errors)
         return redirect('/films')
 
+    def add_args(self, names, req_args):
+        args = {}
+        for name in names:
+            if name in req_args and req_args[name]:
+                args.update({name: req_args[name]})
+        return args
+
     def index(self, request):
         "Lists all films"
         errors = {}
         p = int(request.args.get('p', 1))
+        qry_args = self.add_args(['title', 'release_year'], request.args)
         maxlines = 10
         try:
             film = Film()
-            numrows = film.count(self.db)
-            film_list = film.slice(self.db, maxlines, (p - 1) * maxlines)
+            numrows = film.count(self.db, qry_args)
+            film_list = film.subset(self.db, maxlines, (p - 1) * maxlines,
+                                    qry_args)
+        except KeyError as exc:
+            numrows = 0
+            film_list = []
+            errors = {None: exc}
         except Exception as exc:
             numrows = 0
             film_list = []
             errors = {None: self.db_error(exc)}
+        more = 1 if (numrows % maxlines) else 0
         return render('film/list.html', films=film_list, curr_page=p,
-                      numrows=numrows, numpages=numrows / maxlines + 1,
-                      errors=errors)
+                      numrows=numrows, numpages=numrows / maxlines + more,
+                      qry_args=qry_args, errors=errors)
 
     def edit(self, request, id):
         "Displays a form for editing a film by id"
@@ -102,24 +114,23 @@ class FilmHandler(object):
                           errors={None: self.db_error(exc)})
         if not row:
             raise NotFound("Film %d not found " % film.id)
-        return render('film/edit.html', film=film)
+        return render('film/edit.html', id=id, film=film)
 
     def save(self, request, id=None):
         "Saves the film data submitted from 'edit'"
         form = FilmForm(**request.form)
         form.validate()
         errors = form.errors
-        film = Film(int(id), form.title, int(form.release_year))
-        film.rowver = int(form.rowver)
         if not errors:
+            film = Film(int(id), form.title, int(form.release_year))
+            film.rowver = int(form.rowver)
             try:
                 film.update(self.db, film)
             except Exception as exc:
                 errors = {None: self.db_error(exc)}
             self.db.commit()
         if errors:
-            return render('film/edit.html', id=film.id, film=film,
-                          errors=errors)
+            return render('film/edit.html', id=id, film=form, errors=errors)
         return redirect('/films')
 
     def delete(self, request, id=None):

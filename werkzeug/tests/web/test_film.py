@@ -11,7 +11,7 @@ from dbapp import create_app
 from utils import DbAppTestCase
 
 
-TEST_DATA = {'id': 123, 'title': "A test movie", 'release_year': 1929}
+TEST_DATA = {'title': "A test movie", 'release_year': 1929}
 
 
 class WebFilmTestCase(DbAppTestCase):
@@ -19,12 +19,19 @@ class WebFilmTestCase(DbAppTestCase):
 
     def setUp(self):
         self.db.execute_commit("TRUNCATE TABLE film")
+        self.db.execute_commit("ALTER SEQUENCE film_id_seq RESTART 1")
+        self.key = 1
         self.client = Client(create_app(self.db.name), BaseResponse)
-        self.key = TEST_DATA['id']
 
     def insert_one(self):
-        self.db.execute_commit("INSERT INTO film VALUES (%(id)s, "
-                               "%(title)s, %(release_year)s)", (TEST_DATA))
+        self.db.execute_commit("INSERT INTO film (title, release_year) "
+                               "VALUES (%s, %s)", ("A test movie", 1929))
+
+    def insert_100(self):
+        self.db.execute_commit(
+            "INSERT INTO film (title, release_year) "
+            "SELECT 'Movie ' || i AS title, 1900 + i AS release_year "
+            "FROM generate_series(1, 100) i")
 
     def get_one(self):
         return self.db.fetchone("SELECT xmin, * FROM film WHERE id = %s",
@@ -39,10 +46,8 @@ class WebFilmTestCase(DbAppTestCase):
         self.assertEqual(form.getAttribute('action'), '/film/create')
         self.assertEqual(form.getAttribute('method'), 'post')
         inp = dom.getElementsByTagName('input')[0]
-        self.assertEqual(inp.getAttribute('id'), 'id')
-        inp = dom.getElementsByTagName('input')[1]
         self.assertEqual(inp.getAttribute('id'), 'title')
-        inp = dom.getElementsByTagName('input')[2]
+        inp = dom.getElementsByTagName('input')[1]
         self.assertEqual(inp.getAttribute('id'), 'release_year')
 
     def test_create(self):
@@ -93,11 +98,8 @@ class WebFilmTestCase(DbAppTestCase):
         inp = dom.getElementsByTagName('input')[0]
         self.assertEqual(inp.getAttribute('type'), 'hidden')
         inp = dom.getElementsByTagName('input')[1]
-        self.assertTrue(inp.hasAttribute('readonly'))
-        self.assertEqual(inp.getAttribute('value'), str(TEST_DATA['id']))
-        inp = dom.getElementsByTagName('input')[2]
         self.assertEqual(inp.getAttribute('value'), TEST_DATA['title'])
-        inp = dom.getElementsByTagName('input')[3]
+        inp = dom.getElementsByTagName('input')[2]
         self.assertEqual(inp.getAttribute('value'),
                          str(TEST_DATA['release_year']))
 
@@ -146,20 +148,30 @@ class WebFilmTestCase(DbAppTestCase):
 
     def test_list(self):
         "Select fifth page of list of films"
-        self.db.execute_commit(
-            "INSERT INTO film SELECT i AS id, 'Movie ' || i AS title, "
-            "1900 + i AS release_year FROM generate_series(1, 100) i")
-        resp = self.client.post(path='/films?p=5')
+        self.insert_100()
+        resp = self.client.get(path='/films?p=5')
         self.assertEqual(resp.status_code, 200)
         dom = parseString(resp.data)
-        th = dom.getElementsByTagName('th')[1]
-        self.assertEqual(th.childNodes[0].childNodes[0].data,
-                         'Movie 41 - 1941')
+        th = dom.getElementsByTagName('th')[2]
+        self.assertEqual(th.childNodes[0].childNodes[0].data, 'Movie 41')
         span1 = dom.getElementsByTagName('span')[0]
         self.assertEqual(span1.getAttribute('class'), 'this-page')
         self.assertEqual(span1.childNodes[0].data, '5')
         span2 = dom.getElementsByTagName('span')[1]
         self.assertEqual(span2.childNodes[0].data, '100 films')
+
+    def test_list_search(self):
+        "Search for films by title and release year"
+        self.insert_100()
+        # input: title='movie 7', release_year='>= 1970'
+        qs = 'title=movie+7&release_year=%3E%3D+1970'
+        resp = self.client.get(path='/films', query_string=qs)
+        self.assertEqual(resp.status_code, 200)
+        dom = parseString(resp.data)
+        th = dom.getElementsByTagName('th')[2]
+        self.assertEqual(th.childNodes[0].childNodes[0].data, 'Movie 70')
+        span2 = dom.getElementsByTagName('span')[1]
+        self.assertEqual(span2.childNodes[0].data, '10 films')
 
 
 def suite():

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-{% block page_title %}Select film to change{% endblock %}
+{% block page_title %}Films{% endblock %}
 {% block content %}
-<ul class="newlink"><li><a href="/film/new">New film</a></li></ul>
 <div id="changelist">
   {%- if errors %}
   <p class="errmsg">Please correct the following errors:</p>
@@ -10,14 +9,31 @@
     {% endif %}
   {% endif %}
   <table border="1">
-    <thead>
-      <tr><th>Name</th></tr>
+    <thead class="colhead">
+      <tr>
+        <th>Name</th>
+        <th>Year</th>
+      </tr>
     </thead>
+    <tbody class="colsrch">
+      <tr>
+        <td colspan="2">
+          <form>
+            <input type="text" id="title" name="title" size="32"
+                   value="{{ qry_args['title'] or '' }}" />
+            <input type="text" id="release_year" name="release_year" size="8"
+                   value="{{ qry_args['release_year'] or ''}}" />
+            <input type="submit" value="Search" />
+          </form>
+        </td>
+      </tr>
+    </tbody>
     <tbody>
       {% for film in films -%}
       <tr class="{{ loop.cycle('row1', 'row2') }}">
         <th scope="row"><a href="/film/{{ film.id }}">
-            {{- film|e }}</a></th>
+            {{- film.title|e }}</a></th>
+        <td>{{ film.release_year }}</td>
       </tr>
       {% endfor -%}
     </tbody>
@@ -27,7 +43,7 @@
       {% if curr_page == i -%}
         <span class="this-page">{{ i }}</span>
       {% else -%}
-        <a href="?p={{ i }}">{{ i }}</a>
+        <a href="?{{ qry_args['title'] and ('title=' + qry_args['title'] + '&') or '' }}{{ qry_args['release_year'] and ('release_year=' + qry_args['release_year']|e + '&') or '' }}p={{ i }}">{{ i }}</a>
       {% endif -%}
     {% endfor -%}
     <span id="count">{{ numrows }} films</span>
