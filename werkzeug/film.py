@@ -5,7 +5,11 @@ from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.utils import redirect
 
 from templating import render
-from bl.film import Film
+from bl.film import Film_RV, Film_List
+
+
+def film_repr(tup):
+    return "%s - %d" % (tup.title, tup.release_year)
 
 
 class FilmForm(object):
@@ -29,14 +33,17 @@ class FilmForm(object):
 class FilmHandler(object):
     def __init__(self, dbconn):
         self.db = dbconn
+        self.relvar = Film_RV
+        self.relvar.connect(dbconn)
+        self.relation = Film_List
+        self.relation.connect(self.db)
         self.url_map = Map([
-                Rule('/films', endpoint='index'),
-                Rule('/film/new', endpoint='new'),
-                Rule('/film/create', endpoint='create'),
-                Rule('/film/<int:id>', endpoint='edit'),
-                Rule('/film/<int:id>/save', endpoint='save'),
-                Rule('/film/<int:id>/delete', endpoint='delete')
-                ])
+            Rule('/films', endpoint='index'),
+            Rule('/film/new', endpoint='new'),
+            Rule('/film/create', endpoint='create'),
+            Rule('/film/<int:id>', endpoint='edit'),
+            Rule('/film/<int:id>/save', endpoint='save'),
+            Rule('/film/<int:id>/delete', endpoint='delete')])
 
     def dispatch(self, request):
         adapter = self.url_map.bind_to_environ(request.environ)
@@ -53,7 +60,7 @@ class FilmHandler(object):
 
     def new(self, request):
         "Displays a form to input a new film"
-        return render('film/new.html', film=Film())
+        return render('film/new.html', film=self.relvar.default_tuple())
 
     def create(self, request):
         "Saves the film data submitted from 'new'"
@@ -61,9 +68,10 @@ class FilmHandler(object):
         form.validate()
         errors = form.errors
         if not errors:
-            film = Film(title=form.title, release_year=form.release_year)
+            film = self.relvar.tuple(title=form.title,
+                                     release_year=int(form.release_year))
             try:
-                film.insert(self.db)
+                self.relvar.insert_one(film)
             except Exception as exc:
                 errors = {None: self.db_error(exc)}
             self.db.commit()
@@ -85,10 +93,9 @@ class FilmHandler(object):
         qry_args = self.add_args(['title', 'release_year'], request.args)
         maxlines = 10
         try:
-            film = Film()
-            numrows = film.count(self.db, qry_args)
-            film_list = film.subset(self.db, maxlines, (p - 1) * maxlines,
-                                    qry_args)
+            numrows = self.relation.count(qry_args)
+            film_list = self.relation.subset(maxlines, (p - 1) * maxlines,
+                                             qry_args)
         except KeyError as exc:
             numrows = 0
             film_list = []
@@ -106,15 +113,14 @@ class FilmHandler(object):
         "Displays a form for editing a film by id"
         if id < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
-        film = Film(id)
         try:
-            row = film.get(self.db)
+            row = self.relvar.get_one(self.relvar.key_tuple(id))
         except Exception as exc:
-            return render('film/edit.html', id=film.id,
+            return render('film/edit.html', id=id,
                           errors={None: self.db_error(exc)})
         if not row:
-            raise NotFound("Film %d not found " % film.id)
-        return render('film/edit.html', id=id, film=film)
+            raise NotFound("Film %d not found " % id)
+        return render('film/edit.html', film=row)
 
     def save(self, request, id=None):
         "Saves the film data submitted from 'edit'"
@@ -122,35 +128,36 @@ class FilmHandler(object):
         form.validate()
         errors = form.errors
         if not errors:
-            film = Film(int(id), form.title, int(form.release_year))
-            film.rowver = int(form.rowver)
+            film = self.relvar.tuple(int(id), form.title,
+                                     int(form.release_year))
+            film._tuple_version = int(form.rowver)
             try:
-                film.update(self.db, film)
+                self.relvar.update_one(film, self.relvar.key_tuple(int(id)))
             except Exception as exc:
                 errors = {None: self.db_error(exc)}
             self.db.commit()
         if errors:
-            return render('film/edit.html', id=id, film=form, errors=errors)
+            return render('film/edit.html', id=id, film=film, errors=errors)
         return redirect('/films')
 
     def delete(self, request, id=None):
         "Deletes an existing film by id"
         if id < 1:
             raise NotFound("Film id must be a positive integer: %s" % id)
-        film = Film(id)
+        keytuple = self.relvar.key_tuple(id)
         try:
-            row = film.get(self.db)
+            row = self.relvar.get_one(keytuple)
         except Exception as exc:
-            return render('film/edit.html', id=film.id,
+            return render('film/edit.html', id=id,
                           errors={None: self.db_error(exc)})
         if not row:
-            raise NotFound("Film %d not found " % film.id)
+            raise NotFound("Film %d not found " % id)
         if request.method != 'POST':
-            return render('film/delete.html', id=film.id, film=film)
+            return render('film/delete.html', id=id, film=film_repr(row))
         try:
-            row.delete(self.db)
+            self.relvar.delete_one(keytuple, row)
         except Exception as exc:
-            return render('film/delete.html', id=row.id, film=row,
+            return render('film/delete.html', id=row.id, film=film_repr(row),
                           errors={None: self.db_error(exc)})
         self.db.commit()
         return redirect('/films')

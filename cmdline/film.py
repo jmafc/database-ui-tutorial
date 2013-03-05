@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from bl.film import Film
+from bl.film import Film_RV, film_repr, Film_List
 
 
 class FilmForm(object):
@@ -52,6 +52,10 @@ class FilmForm(object):
 class FilmHandler(object):
     def __init__(self, dbconn):
         self.db = dbconn
+        self.relvar = Film_RV
+        self.relvar.connect(dbconn)
+        self.relation = Film_List
+        self.relation.connect(self.db)
 
     def db_error(self, exc):
         return 'A database error has occurred: %s' % exc.args[0]
@@ -82,7 +86,7 @@ class FilmHandler(object):
     def list(self):
         errors = {}
         try:
-            film_list = Film().all(self.db)
+            film_list = self.relation.subset()
         except Exception as exc:
             film_list = []
             errors = {None: self.db_error(exc)}
@@ -96,9 +100,9 @@ class FilmHandler(object):
     def create(self):
         form = FilmForm().edit()
         errors = {}
-        film = Film(form.id, form.title, form.release_year)
+        film = self.relvar.tuple(form.id, form.title, form.release_year)
         try:
-            film.insert(self.db)
+            self.relvar.insert_one(film)
         except Exception as exc:
             errors = {None: self.db_error(exc)}
         else:
@@ -106,24 +110,24 @@ class FilmHandler(object):
         if errors:
             print("%s" % errors[None])
             return
-        print("Film '%r' added" % film)
+        print("Film %r added" % film_repr(film))
 
     def update(self):
         id = FilmForm().get_key()
-        old_film = Film(int(id))
+        keytup = self.relvar.key_tuple(id)
         try:
-            row = old_film.get(self.db)
+            tup = self.relvar.get_one(keytup)
         except Exception as exc:
             errors = {None: self.db_error(exc)}
-        if not row:
-            print("Film %d not found " % old_film.id)
+        if not tup:
+            print("Film %d not found " % int(id))
             return
-        print "Updating '%r'" % old_film
-        form = FilmForm(**old_film.__dict__).edit(True)
+        print "Updating %r" % film_repr(tup)
+        form = FilmForm(**tup.__dict__).edit(True)
         errors = {}
-        film = Film(form.id, form.title, form.release_year)
+        film = self.relvar.tuple(form.id, form.title, form.release_year)
         try:
-            film.update(self.db, old_film)
+            self.relvar.update_one(film, keytup)
         except Exception as exc:
             errors = {None: self.db_error(exc)}
         else:
@@ -131,24 +135,24 @@ class FilmHandler(object):
         if errors:
             print("%s" % errors[None])
             return
-        print("Film '%r' updated" % film)
+        print("Film %r updated" % film_repr(film))
 
     def delete(self):
         id = FilmForm().get_key()
-        old_film = Film(int(id))
+        keytup = self.relvar.key_tuple(id)
         try:
-            row = old_film.get(self.db)
+            row = self.relvar.get_one(keytup)
         except Exception as exc:
             errors = {None: self.db_error(exc)}
         if not row:
-            print("Film %d not found " % old_film.id)
+            print("Film %d not found " % int(id))
             return
-        confirm = raw_input("Delete film '%r' (y/n) [n]: " % old_film)
+        confirm = raw_input("Delete film %r (y/n) [n]: " % film_repr(row))
         if not confirm.lower()[:1] == 'y':
             return
         errors = {}
         try:
-            old_film.delete(self.db)
+            self.relvar.delete_one(keytup, row)
         except Exception as exc:
             errors = {None: self.db_error(exc)}
         else:
@@ -156,4 +160,4 @@ class FilmHandler(object):
         if errors:
             print("%s" % errors[None])
             return
-        print("Film '%r' deleted" % old_film)
+        print("Film %r deleted" % film_repr(row))
