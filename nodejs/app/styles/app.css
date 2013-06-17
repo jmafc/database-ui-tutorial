@@ -1,0 +1,12 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+h1 {
+    font-size: 18px;
+    color: blue;
+}
+h3 {
+    font-size: 14px;
+    color: red;
+}

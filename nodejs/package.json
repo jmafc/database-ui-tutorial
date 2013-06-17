@@ -1,0 +1,29 @@
+{
+  "name": "database-ui-tutorial",
+  "version": "0.5.0",
+  "description": "Programs to explore design of user interfaces to PostgreSQL",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jmafc/database-ui-tutorial.git"
+  },
+  "keywords": [
+    "database",
+    "postgres",
+    "angular",
+    "express"
+  ],
+  "author": "Joe Abbate",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/jmafc/database-ui-tutorial/issues"
+  },
+  "dependencies": {
+    "coffee-script-brunch": ">= 1.0 < 1.7",
+    "css-brunch": ">= 1.0 < 1.7",
+    "javascript-brunch": ">= 1.0 < 1.7"
+  }
+}

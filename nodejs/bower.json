@@ -1,0 +1,14 @@
+{
+  "name": "database-ui-tutorial",
+  "version": "0.5.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "vendor"
+  ],
+  "dependencies": {
+    "angular": "1.0.7",
+    "angular-resource": "1.0.7",
+    "bootstrap": "2.3.2"
+  }
+}
