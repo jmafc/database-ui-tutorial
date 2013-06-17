@@ -10,10 +10,10 @@ exports.config =
         'js/vendor.js': /^vendor/
       order:
         before: [
-          'vendor/jquery/jquery.js'
-          'vendor/angular/angular.js'
-          'vendor/angular-resource/angular-resource.js'
-          'vendor/bootstrap/docs/assets/js/bootstrap.js'
+          'vendor/scripts/jquery.js'
+          'vendor/scripts/angular.js'
+          'vendor/scripts/angular-resource.js'
+          'vendor/scripts/bootstrap.js'
         ]
     stylesheets:
       joinTo:
