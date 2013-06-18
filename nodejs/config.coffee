@@ -18,3 +18,5 @@ exports.config =
     stylesheets:
       joinTo:
         'css/app.css': /^(app|vendor)/
+  server:
+    path: 'server.js'

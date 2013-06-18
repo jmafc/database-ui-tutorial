@@ -22,6 +22,7 @@
     "url": "https://github.com/jmafc/database-ui-tutorial/issues"
   },
   "dependencies": {
+    "express": "3.2.6",
     "coffee-script-brunch": ">= 1.0 < 1.7",
     "css-brunch": ">= 1.0 < 1.7",
     "javascript-brunch": ">= 1.0 < 1.7"
