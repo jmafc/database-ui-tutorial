@@ -73,3 +73,9 @@ following::
      └── vendor.js
 
 Open the URL http://localhost:3333/ in your web browser.
+
+Test the auto-reload feature by editing either
+``app/assets/index.html`` (add something to the text of the ``<h1>``
+tag) or ``app/app.js`` (change the text of the message).  You should
+see an "info: compiled in ..." message from Brunch and the browser
+should reflect your changes almost immediately.
