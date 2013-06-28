@@ -79,3 +79,41 @@ Test the auto-reload feature by editing either
 tag) or ``app/app.js`` (change the text of the message).  You should
 see an "info: compiled in ..." message from Brunch and the browser
 should reflect your changes almost immediately.
+
+Node-postgres
+=============
+
+In order to test this, you'll need to have `PostgreSQL
+<http://www.postgresql.org/>`_ installed.  Any recent version should
+work.  Create a test database and test table as follows::
+
+ createdb moviesdev
+ psql moviesdev
+
+ moviesdev=> CREATE TABLE film (
+    id serial PRIMARY KEY,
+    title character varying(32) UNIQUE NOT NULL,
+    release_year integer NOT NULL CHECK (release_year >= 1888));
+
+Alternatively, if you have Pyrseas installed, you can issue the
+``createdb`` command and then (assuming you're in the ``nodejs``
+directory)::
+
+ yamltodb -u moviesdev ../film.yaml
+
+After running ``brunch watch --server``, you should be able to access
+``http://localhost:3333/api/films`` to view or update the
+table. Initially, of course, the URL above should show an empty
+array. ``http://localhost:3333/api/films/count`` should display::
+
+ {
+   "count": 0
+ }
+
+To add, update or delete rows you'll need to use ``curl``, e.g.::
+
+ curl -X POST -d "title=Seven Samurai" -d "release_year=1954" http://localhost:3333/api/films
+ curl -X PUT -d "title=Sichinin no Samurai" -d "release_year=1954" http://localhost:3333/api/films/1
+ curl -X DELETE http://localhost:3333/api/films/1
+
+Alternatively, you can use a browser REST extension.
