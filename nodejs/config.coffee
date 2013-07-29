@@ -3,20 +3,21 @@ exports.config =
   modules:
     definition: false
     wrapper: false
+  paths:
+    jadeCompileTrigger: '.compile-jade'
   files:
     javascripts:
       joinTo:
         'js/app.js': /^app/
-        'js/vendor.js': /^vendor/
-      order:
-        before: [
-          'vendor/scripts/jquery.js'
-          'vendor/scripts/angular.js'
-          'vendor/scripts/angular-resource.js'
-          'vendor/scripts/bootstrap.js'
-        ]
+        'js/vendor.js': /^bower_components/
     stylesheets:
       joinTo:
-        'css/app.css': /^(app|vendor)/
-  server:
-    path: 'server.js'
+        'css/app.css': /^(app|bower_components|vendor)/
+    templates:
+      joinTo:
+        '.compile-jade': /^app/
+  plugins:
+    jade:
+      pretty: yes
+    jade_angular:
+      modules_folder: 'templates'
