@@ -27,29 +27,30 @@ Install Brunch globally, using::
 Bower
 =====
 
-Install Bower globally, using::
+Install Bower globally and then install Bower components, using::
 
  npm install -g bower
+ bower install
 
-Until Bower support is released for Brunch, some manual steps are
-necessary:
+Note: The latter command requires that Git be on your path, so on
+Windows you may want to invoke it from a Git Bash window.
 
- - Invoke ``bower install``.  This will create the ``components``
-   directory and fetch the AngularJS and Twitter Bootstrap components
-   specified in ``bower.json`` into the new directory (JQuery will
-   also be there, as a side effect of requiring Bootstrap).
+``bower install`` will create the ``bower_components`` directory and
+fetch the AngularJS and Twitter Bootstrap components specified in
+``bower.json`` into the new directory.
 
- - Create the ``vendor`` directories::
+Note: Due to a problem in Brunch 1.7.0, you currently have to manually
+copy the Bootstrap CSS file to a ``vendor`` directory.  In addition,
+to make auto-reload work properly in the browser, you need to copy
+``auto-reload.js`` to another ``vendor`` directory.  Do the following::
 
-    mkdir -p vendor/scripts vendor/styles
+ mkdir -p vendor/styles vendor/scripts
+ cp bower_components/bootstrap/docs/assets/css/bootstrap.css vendor/styles/
+ cp node_modules/auto-reload-brunch/vendor/auto-reload.js vendor/scripts
 
- - Copy components to the vendor directories::
-
-    cp components/angular/angular.js vendor/scripts/
-    cp components/angular-resource/angular-resource.js vendor/scripts/
-    cp components/bootstrap/docs/assets/js/bootstrap.js vendor/scripts/
-    cp components/bootstrap/docs/assets/css/bootstrap.css vendor/styles/
-    cp components/jquery/jquery.js vendor/scripts/
+Brunch will then concatenate ``bootstrap.css`` before the application
+stylesheet (it will also copy it to ``public/css`` but this can be
+disregarded).
 
 Run the Application
 ===================
@@ -66,11 +67,15 @@ following::
 
  public/
  ├── css
- │   └── app.css
+ │   └── app.css
  ├── index.html
  └── js
      ├── app.js
      └── vendor.js
+
+Instead of the two ``brunch`` commands you can use::
+
+ npm start
 
 Open the URL http://localhost:3333/ in your web browser.
 
@@ -101,7 +106,7 @@ directory)::
 
  yamltodb -u moviesdev ../film.yaml
 
-After running ``brunch watch --server``, you should be able to access
+After running ``npm start``, you should be able to access
 ``http://localhost:3333/api/films`` to view or update the
 table. Initially, of course, the URL above should show an empty
 array. ``http://localhost:3333/api/films/count`` should display::
