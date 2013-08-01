@@ -1,0 +1,15 @@
+!!!
+html
+  head
+    meta(charset="utf-8")
+    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    title Testing Angular
+
+    link(rel="stylesheet", href="/css/app.css", media="screen")
+  body
+    h1 Hello World of Brunch with Angular
+    .containr(ng-app="")
+      div(ng-controller="MyCtrl")
+        h3.alert.alert-error {{myMsg}}
+    script(src="js/vendor.js")
+    script(src="js/app.js")
