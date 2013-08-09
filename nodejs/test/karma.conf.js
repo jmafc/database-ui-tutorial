@@ -1,14 +1,16 @@
-basePath = '../';
+var sharedConfig = require('./karma-shared.conf');
 
-files = [
-  JASMINE,
-  JASMINE_ADAPTER,
-  'bower_components/angular/angular.js',
-  'bower_components/angular-*/angular-*.js',
-  'app/*.coffee',
-  'test/unit/**/*.coffee'
-];
+module.exports = function(config) {
+  sharedConfig(config);
 
-autoWatch = true;
-
-browsers = ['Firefox'];
+  config.set({
+    frameworks: ['jasmine'],
+    files: [
+      'bower_components/angular/angular.js',
+      'bower_components/angular-*/angular-*.js',
+      'app/*.coffee',
+      'test/unit/**/*.coffee'
+    ],
+    autoWatch: true
+  });
+};
