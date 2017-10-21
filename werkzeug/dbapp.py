@@ -10,7 +10,7 @@ from werkzeug.wrappers import Request
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.wsgi import SharedDataMiddleware
 
-from pyrseas.lib.dbconn import DbConnection
+from pgdbconn.dbconn import DbConnection
 
 from templating import render
 from film import FilmHandler
