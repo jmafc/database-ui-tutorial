@@ -10,7 +10,7 @@
   {% endif %}
   <form class="mainform" name="chgfilm" action="/film/{{ film.id }}/save"
         method="post">
-    <input type="hidden" name="rowver" value="{{ film.rowver }}" />
+    <input type="hidden" name="rowver" value="{{ film._tuple_version }}" />
     {%- set edit = true -%}
     {% include "film/fields.html" %}
     <div class="submit-btn">

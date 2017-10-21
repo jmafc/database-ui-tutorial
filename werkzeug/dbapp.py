@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import os
@@ -19,8 +19,8 @@ from film import FilmHandler
 class DatabaseApp(object):
     def __init__(self, dbname):
         if sys.version < '3':
-            from psycopg2.extensions import register_type, UNICODE
-            register_type(UNICODE)
+            print("Please run under Python 3.x")
+            sys.exit(1)
         self.dbconn = DbConnection(dbname)
         self.film = FilmHandler(self.dbconn)
         self.url_map = Map([

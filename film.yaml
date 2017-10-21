@@ -1,3 +1,7 @@
+extension plpgsql:
+  description: PL/pgSQL procedural language
+  schema: pg_catalog
+  version: '1.0'
 schema public:
   description: standard public schema
   sequence film_id_seq:
@@ -27,12 +31,10 @@ schema public:
         type: integer
     primary_key:
       film_pkey:
-        access_method: btree
         columns:
         - id
     unique_constraints:
       film_title_key:
-        access_method: btree
         columns:
         - title
         - release_year

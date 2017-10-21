@@ -106,7 +106,7 @@ class FilmHandler(object):
             errors = {None: self.db_error(exc)}
         more = 1 if (numrows % maxlines) else 0
         return render('film/list.html', films=film_list, curr_page=p,
-                      numrows=numrows, numpages=numrows / maxlines + more,
+                      numrows=numrows, numpages=numrows // maxlines + more,
                       qry_args=qry_args, errors=errors)
 
     def edit(self, request, id):
