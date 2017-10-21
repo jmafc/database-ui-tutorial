@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 from optparse import OptionParser
 
-from pyrseas.lib.dbconn import DbConnection
+from pgdbconn.dbconn import DbConnection
 
 from film import FilmHandler
 
@@ -11,8 +11,8 @@ from film import FilmHandler
 class DatabaseApp(object):
     def __init__(self, dbname):
         if sys.version < '3':
-            from psycopg2.extensions import register_type, UNICODE
-            register_type(UNICODE)
+            print("Please run under Python 3.x")
+            sys.exit(1)
         self.dbconn = DbConnection(dbname)
         self.film = FilmHandler(self.dbconn)
 
@@ -20,7 +20,7 @@ class DatabaseApp(object):
         while True:
             for cmd in ['Films', 'Quit']:
                 print('  %s - %s' % (cmd[:1], cmd))
-            cmd = raw_input("Command? ").upper()[:1]
+            cmd = input("Command? ").upper()[:1]
             if cmd == 'Q':
                 break
             elif cmd == 'F':
@@ -29,7 +29,7 @@ class DatabaseApp(object):
             else:
                 print("Invalid choice")
         self.dbconn.close()
-        print "Done"
+        print("Done")
 
 
 if __name__ == '__main__':

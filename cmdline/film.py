@@ -14,7 +14,7 @@ class FilmForm(object):
     def get_key(self):
         id = 0
         while True:
-            id = raw_input("Id: ")
+            id = input("Id: ")
             if not id.isdigit() or int(id) < 1:
                 print("Id must be a positive integer")
                 continue
@@ -24,25 +24,25 @@ class FilmForm(object):
     def edit(self, upd=False):
         while True:
             if not upd:
-                id = raw_input("Id [%s]: " % self.id).lstrip()
+                id = input("Id [%s]: " % self.id).lstrip()
                 if not id:
                     id = str(self.id)
                 if not id.isdigit() or int(id) < 1:
-                    print "Id must be a positive integer"
+                    print("Id must be a positive integer")
                     continue
                 self.id = int(id)
-            title = raw_input("Title [%s]: " % self.title).lstrip()
+            title = input("Title [%s]: " % self.title).lstrip()
             if not title:
                 title = self.title
             if not title:
-                print "Title cannot be an empty string"
+                print("Title cannot be an empty string")
                 continue
             self.title = title
-            release_year = raw_input("Release year [%s]: " % self.release_year)
+            release_year = input("Release year [%s]: " % self.release_year)
             if not release_year:
                 release_year = str(self.release_year)
             if not release_year.isdigit() or not int(release_year) >= 1888:
-                print "Release year must be a number greater than 1887"
+                print("Release year must be a number greater than 1887")
                 continue
             self.release_year = int(release_year)
             break
@@ -65,7 +65,7 @@ class FilmHandler(object):
         while True:
             for cmd in ['Add', 'List', 'Update', 'Delete', 'End', 'Quit']:
                 print('  %s - %s' % (cmd[:1], cmd))
-            cmd = raw_input("Command? ").upper()[:1]
+            cmd = input("Command? ").upper()[:1]
             if cmd == 'A':
                 self.create()
             elif cmd == 'L':
@@ -122,7 +122,7 @@ class FilmHandler(object):
         if not tup:
             print("Film %d not found " % int(id))
             return
-        print "Updating %r" % film_repr(tup)
+        print("Updating %r" % film_repr(tup))
         form = FilmForm(**tup.__dict__).edit(True)
         errors = {}
         film = self.relvar.tuple(form.id, form.title, form.release_year)
@@ -147,7 +147,7 @@ class FilmHandler(object):
         if not row:
             print("Film %d not found " % int(id))
             return
-        confirm = raw_input("Delete film %r (y/n) [n]: " % film_repr(row))
+        confirm = input("Delete film %r (y/n) [n]: " % film_repr(row))
         if not confirm.lower()[:1] == 'y':
             return
         errors = {}
